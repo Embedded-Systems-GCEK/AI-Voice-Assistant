@@ -1,0 +1,7 @@
+speechrecognition
+pyttsx3
+google-generativeai
+gtts
+pygame
+langdetect
+pyaudio
