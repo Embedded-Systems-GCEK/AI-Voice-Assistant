@@ -1,4 +1,3 @@
-# app.py
 import json
 from assistant import Assistant
 from cohere_api import ask_cohere

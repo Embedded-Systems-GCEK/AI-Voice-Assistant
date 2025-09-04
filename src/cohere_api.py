@@ -1,4 +1,3 @@
-# cohere_api.py
 import cohere
 
 COHERE_API_KEY = "32kO4SNZBl4ofFP2NxSBnmQ8Mm8izj7tcNmJsgh6"

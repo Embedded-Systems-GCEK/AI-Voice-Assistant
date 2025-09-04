@@ -1,4 +1,3 @@
-# assistant.py
 import speech_recognition as sr
 from tts import speak
 import datetime
@@ -30,6 +29,7 @@ class Assistant:
             return ""
 
     def speak(self, text):
+        # Clean unwanted chars
         clean_text = re.sub(r'[*_`~#>\\-]', '', text)
         clean_text = re.sub(r'[\U00010000-\U0010ffff]', '', clean_text)
         speak(clean_text)
