@@ -1,3 +1,4 @@
+
 🎙️ AI Voice Assistant (Cyrus)
 
 A simple Python voice assistant that can:
@@ -23,6 +24,7 @@ Windows (PowerShell):
 
 python -m venv .venv
 .venv\Scripts\Activate.ps1
+
 
 
 Linux/Mac:
@@ -53,6 +55,7 @@ echo Hello world | ./piper/piper.exe --model ./piper/en_US-amy-low.onnx --output
 
 If test.wav plays correctly, TTS is working.
 
+
 5. Setup Cohere (Optional)
 
 If you want smarter AI replies (when online):
@@ -71,6 +74,7 @@ COHERE_API_KEY = "your_api_key_here"
 6. Check dictionaries.json
 
 Make sure dictionaries.json exists in the project root. Example:
+
 
 {
   "hello": "Hi there! How can I help you?",
