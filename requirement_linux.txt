@@ -1,4 +1,9 @@
-audioop-lts==0.2.1
+
+cohere
+SpeechRecognition==3.14.3
+PyAudio==0.2.14
+requests==2.32.4audioop-lts==0.2.1
+
 beautifulsoup4==4.13.4
 certifi==2025.6.15
 charset-normalizer==3.4.2

@@ -1,40 +1,56 @@
-import requests
-import pygame  # For music control
-import time
-import re
 
-file = "piper_output.wav"
-ip = "192.168.31.17"
-port = "10200"
-end_point = "/api/text-to-speech"
-voice = "en_US-lessac-medium"  # Default voice
-piper_url = f"http://{ip}:{port}{end_point}?voice={voice}"
+import subprocess
+import tempfile
+import os
+import platform
+import winsound
 
-def save_to_file(response):
-    with open(file, "wb") as f:
-        f.write(response.content)
-        # Play the audio
-def play_audio(file="piper_output.wav"):
-    pygame.mixer.init()
-    pygame.mixer.music.load(file)
-    pygame.mixer.music.play()
-    while pygame.mixer.music.get_busy():
-        time.sleep(0.1)
-    pygame.mixer.quit()
+# Base directory = where this file lives (src/)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Piper folder is one level up (../piper/)
+PIPER_DIR = os.path.join(BASE_DIR, "..", "piper")
 
-def get_text(chunk_text):
+# Detect executable name (Windows uses .exe, Linux/Mac does not)
+if platform.system() == "Windows":
+    PIPER_PATH = os.path.join(PIPER_DIR, "piper.exe")
+else:
+    PIPER_PATH = os.path.join(PIPER_DIR, "piper")
+
+MODEL_PATH = os.path.join(PIPER_DIR, "en_US-amy-low.onnx")
+
+def speak(text):
     try:
-        return requests.post(
-            piper_url,
-            data=chunk_text.encode('utf-8'),
-            headers={'Content-Type': 'text/plain'}
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            wav_path = tmp.name
+
+        # Run Piper
+        result = subprocess.run(
+            [PIPER_PATH, "--model", MODEL_PATH, "--output_file", wav_path],
+            input=text,
+            text=True,
+            capture_output=True
         )
+
+        if result.returncode != 0:
+            print("[TTS Error] Piper failed:", result.stderr)
+            print("Fallback (text only):", text)
+            return
+
+        # Play audio (Windows only)
+        if platform.system() == "Windows":
+            winsound.PlaySound(wav_path, winsound.SND_FILENAME)
+        else:
+            # Linux/Mac fallback: use 'aplay' or 'afplay'
+            try:
+                player = "afplay" if platform.system() == "Darwin" else "aplay"
+                subprocess.run([player, wav_path])
+            except Exception:
+                print("[Audio Error] Could not play audio. Saved at:", wav_path)
+
+        os.remove(wav_path)
+
     except Exception as e:
-        print("Piper request failed:", e)
+        print("[TTS Error]", e)
+        print("Fallback (text only):", text)
 
-
-if __name__ == "__main__":
-    # TTS Test example
-    text = "Hello, this is a test of the text  to speech system."
-    speak(text)
