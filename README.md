@@ -1,18 +1,11 @@
-
 # Voice Assistant (with Piper TTS)
-
-
 
 A simple offline/online voice assistant powered by:
 
-- \*\*Piper\*\* (Text-to-Speech, local/offline)
-
-- \*\*SpeechRecognition\*\* (speech-to-text)
-
-- \*\*Cohere API\*\* (online answers)
-
-- \*\*Ollama\*\* (local LLM fallback)
-
+- **Piper** (Text-to-Speech, local/offline)
+- **SpeechRecognition** (speech-to-text)
+- **Cohere API** (online answers)
+- **Ollama** (local LLM fallback)
 
 
 ---
@@ -36,14 +29,11 @@ A simple offline/online voice assistant powered by:
 
 ## 📦 Requirements
 
-
-
 Install Python dependencies:
 
-
-
-
-
-
-
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+pip install -r requirements.txt
+```
 
