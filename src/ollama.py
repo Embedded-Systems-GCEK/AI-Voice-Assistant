@@ -5,7 +5,7 @@ class Ollama:
     def __init__(self):
         pass
     
-    def ask_ollama(self,prompt) -> str:
+    def ask_ollama(self, prompt) -> str:
         try:
             formatted_prompt = f"Answer clearly and briefly: {prompt}"
             result = subprocess.run(
