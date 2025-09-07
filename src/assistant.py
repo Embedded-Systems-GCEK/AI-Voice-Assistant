@@ -8,7 +8,7 @@ from ollama import Ollama
 from files import Files
 import threading
 class Assistant:
-    def __init__(self, status: Status, name: str, tts: TTS,ollama: Ollama,files: Files):
+    def __init__(self, status: Status, name: str, tts: TTS, ollama: Ollama, files: Files):
         self.status: Status = status
         self.name: str = name
         self.tts: TTS = tts
