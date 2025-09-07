@@ -13,7 +13,7 @@ class Assistant:
         self.name: str = name
         self.tts: TTS = tts
         self.ollama: Ollama = ollama
-        self.files = Files()
+        self.files = files
         self.recognizer: sr.Recognizer = sr.Recognizer()
         self.question: str = ""
         self.response: str = ""
