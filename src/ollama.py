@@ -1,5 +1,6 @@
 import subprocess
 
+
 def ask_ollama(prompt):
     try:
         formatted_prompt = f"Answer clearly and briefly: {prompt}"
@@ -14,3 +15,4 @@ def ask_ollama(prompt):
         return ' '.join(lines[:3])
     except Exception as e:
         return f"Error communicating with Ollama: {e}"
+

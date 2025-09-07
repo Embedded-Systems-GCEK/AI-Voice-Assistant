@@ -1,3 +1,4 @@
+
 import subprocess
 import tempfile
 import os
@@ -52,3 +53,4 @@ def speak(text):
     except Exception as e:
         print("[TTS Error]", e)
         print("Fallback (text only):", text)
+

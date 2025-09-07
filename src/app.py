@@ -1,3 +1,4 @@
+
 import json
 from assistant import Assistant
 from cohere_api import ask_cohere
@@ -11,12 +12,14 @@ def is_connected():
     except:
         return False
 
+
 with open("dictionaries.json", "r") as file:
     qa_dictionary = json.load(file)
 
 def process_command(query):
     if query == "":
         return
+
 
     if query in qa_dictionary:
         assistant.speak(qa_dictionary[query])
@@ -47,6 +50,7 @@ def process_command(query):
 def main():
     global assistant
     assistant = Assistant("Cyrus")
+
     assistant.greet()
     while True:
         query = assistant.listen()

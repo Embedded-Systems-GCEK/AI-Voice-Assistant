@@ -1,4 +1,5 @@
 import speech_recognition as sr
+
 from tts import speak
 import datetime
 import re
@@ -11,17 +12,21 @@ class Assistant:
         greeting = f"Hello, I am {self.name}. How can I assist you today?"
         speak(greeting)
 
+
     def listen(self):
         recognizer = sr.Recognizer()
         with sr.Microphone() as source:
             print("Listening...")
             recognizer.pause_threshold = 0.5
+
             audio = recognizer.listen(source, phrase_time_limit=6)
+
         try:
             command = recognizer.recognize_google(audio, language='en-US')
             print(f"You said: {command}")
             return command.lower()
         except sr.UnknownValueError:
+
             speak("Sorry, I didn't catch that.")
             return ""
         except sr.RequestError:
@@ -49,3 +54,4 @@ class Assistant:
     def tell_datetime(self):
         dt = datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
         speak(f"The current date and time is {dt}")
+
