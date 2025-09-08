@@ -1,0 +1,9 @@
+# Core AI Voice Assistant dependencies
+speechrecognition
+pyaudio
+
+# AI and API integration
+cohere
+
+# Additional utilities
+requests
