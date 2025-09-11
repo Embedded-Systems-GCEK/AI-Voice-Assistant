@@ -8,11 +8,11 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from assistant.assistant import Assistant
-from assistant.status import Status
-from assistant.tts import TTS
-from assistant.ollama import Ollama
-from assistant.files import Files
+from src.assistant.assistant import ConversationalAssistant
+from src.assistant.status.status import Status
+from src.assistant.robot.answer_helper.tts.tts import PIPER_TTS
+from src.assistant.ai_providers.ollama import Ollama
+from src.assistant.files.files import Files
 
 def test_timeout_assistant():
     """Test the assistant with timeout functionality"""
@@ -23,12 +23,19 @@ def test_timeout_assistant():
     
     # Initialize required components
     status = Status()
-    tts = TTS()
+    tts = PIPER_TTS()
     ollama = Ollama()
     files = Files()
     
     # Create assistant with timeout functionality
-    assistant = Assistant(status, "ARIA", tts, ollama, files)
+    assistant = ConversationalAssistant(
+        name="ARIA",
+        voice_config=None,
+        status=status,
+        tts=tts,
+        ollama=ollama,
+        files=files
+    )
     
     # Set timeout to 10 seconds (you can change this)
     assistant.set_timeout(10)
@@ -56,11 +63,18 @@ def test_manual_commands():
     
     # Initialize components
     status = Status()
-    tts = TTS()
+    tts = PIPER_TTS()
     ollama = Ollama()
     files = Files()
     
-    assistant = Assistant(status, "ARIA", tts, ollama, files)
+    assistant = ConversationalAssistant(
+        name="ARIA",
+        voice_config=None,
+        status=status,
+        tts=tts,
+        ollama=ollama,
+        files=files
+    )
     assistant.set_timeout(5)  # Shorter timeout for testing
     
     print("Testing timeout scenarios:")

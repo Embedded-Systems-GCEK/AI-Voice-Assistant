@@ -39,13 +39,26 @@ from ollama import Ollama
 from files import Files
 
 # Initialize components
+from src.assistant.assistant import ConversationalAssistant
+from src.assistant.status.status import Status
+from src.assistant.robot.answer_helper.tts.tts import PIPER_TTS
+from src.assistant.ai_providers.ollama import Ollama
+from src.assistant.files.files import Files
+
 status = Status()
-tts = TTS()
+tts = PIPER_TTS()
 ollama = Ollama()
 files = Files()
 
 # Create assistant
-assistant = Assistant(status, "ARIA", tts, ollama, files)
+assistant = ConversationalAssistant(
+    name="ARIA",
+    voice_config=None,
+    status=status,
+    tts=tts,
+    ollama=ollama,
+    files=files
+)
 
 # Set custom timeout (optional)
 assistant.set_timeout(15)  # 15 seconds

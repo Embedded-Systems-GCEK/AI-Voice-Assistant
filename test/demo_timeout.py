@@ -45,7 +45,7 @@ def demonstrate_timeout():
     import builtins
     builtins.ask_cohere = mock_ask_cohere
     
-    from assistant.assistant import Assistant
+    from src.assistant.assistant import ConversationalAssistant
     
     # Initialize with mock objects
     status = MockStatus()
@@ -53,7 +53,14 @@ def demonstrate_timeout():
     ollama = MockOllama()
     files = MockFiles()
     
-    assistant = Assistant(status, "DEMO_ASSISTANT", tts, ollama, files)
+    assistant = ConversationalAssistant(
+        name="DEMO_ASSISTANT",
+        voice_config=None,
+        status=status,
+        tts=tts,
+        ollama=ollama,
+        files=files
+    )
     assistant.set_timeout(3)  # Short timeout for demo
     
     print("1. Initial greeting:")

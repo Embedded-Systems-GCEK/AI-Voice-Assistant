@@ -6,11 +6,11 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 try:
-    from assistant.assistant import Assistant
-    from assistant.status import Status
-    from assistant.tts import TTS
-    from assistant.ollama import Ollama
-    from assistant.files import Files
+    from assistant.assistant import ConversationalAssistant
+    from assistant.status.status import Status
+    from assistant.robot.answer_helper.tts.tts import PIPER_TTS
+    from assistant.ai_providers.ollama import Ollama
+    from assistant.files.files import Files
     ASSISTANT_AVAILABLE = True
 except ImportError:
     ASSISTANT_AVAILABLE = False
@@ -85,10 +85,16 @@ assistant_instance = None
 if ASSISTANT_AVAILABLE:
     try:
         status = Status()
-        tts = TTS()
+        tts = PIPER_TTS()
         ollama = Ollama()
         files = Files()
-        assistant_instance = Assistant(status, "ARIA", tts, ollama, files)
+        assistant_instance = ConversationalAssistant(
+            name="ARIA", 
+            status=status, 
+            tts=tts, 
+            ollama=ollama, 
+            files=files
+        )
         assistant_instance.set_timeout(10)
         print("Assistant initialized successfully")
     except Exception as e:
