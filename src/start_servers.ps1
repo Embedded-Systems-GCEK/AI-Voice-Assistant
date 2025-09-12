@@ -26,24 +26,19 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "python api_server
 
 Start-Sleep 3
 
-Write-Host "🚀 Starting Main Server (Port 5000)..." -ForegroundColor Blue  
+Write-Host "🚀 Starting Unified Server (Port 5000)..." -ForegroundColor Blue  
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "python server/server.py"
-
-Start-Sleep 3
-
-Write-Host "🚀 Starting UI Server (Port 5002)..." -ForegroundColor Magenta
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "python ui/server.py"
 
 Write-Host ""
 Write-Host "✅ All servers are starting in separate windows!" -ForegroundColor Green
 Write-Host ""
 Write-Host "🔗 Server URLs:" -ForegroundColor Yellow
-Write-Host "   • API Server:    http://localhost:5001" -ForegroundColor White
-Write-Host "   • Main Server:   http://localhost:5000" -ForegroundColor White  
-Write-Host "   • UI Server:     http://localhost:5002" -ForegroundColor White
+Write-Host "   • API Server:      http://localhost:5001" -ForegroundColor White
+Write-Host "   • Unified Server:  http://localhost:5000" -ForegroundColor White  
 Write-Host ""
 Write-Host "📱 Flutter Integration:" -ForegroundColor Yellow
-Write-Host "   Use http://localhost:5001 as your base URL" -ForegroundColor White
+Write-Host "   Use http://localhost:5001 as your base URL for Flutter apps" -ForegroundColor White
+Write-Host "   Use http://localhost:5000 for web UI and general API access" -ForegroundColor White
 Write-Host ""
 Write-Host "🧪 To test the APIs, run:" -ForegroundColor Yellow
 Write-Host "   python launcher.py --test" -ForegroundColor White

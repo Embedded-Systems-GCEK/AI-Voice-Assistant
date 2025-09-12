@@ -17,18 +17,18 @@ class TTS(ABC):
     # A TTS class typically takes text as an argument to 'speak', not as a property.
     # Removing the 'text' abstractmethod and property as they don't fit the TTS interface.
 # Base directory = project root directory (go up from tts.py location)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+BASE_DIR =  os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))))
 
 # Piper folder is at the root
 PIPER_DIR = os.path.join(BASE_DIR, "piper")
 
 # Detect executable name (Windows uses .exe, Linux/Mac does not)
 if platform.system() == "Windows":
-    PIPER_PATH = os.path.join(PIPER_DIR, "piper.exe")
+    PIPER_PATH = os.path.join( "..",PIPER_DIR,"piper.exe")
 else:
-    PIPER_PATH = os.path.join(PIPER_DIR, "piper")
+    PIPER_PATH = os.path.join("..",PIPER_DIR,  "piper")
 
-MODEL_PATH = os.path.join(PIPER_DIR, "en_US-amy-low.onnx")
+MODEL_PATH = os.path.join(".." ,PIPER_DIR, "en_US-amy-low.onnx")
 
 class PIPER_TTS(TTS):
     def __init__(self):

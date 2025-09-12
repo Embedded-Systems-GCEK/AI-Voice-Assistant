@@ -12,23 +12,30 @@ import sys
 import os
 from datetime import datetime
 import uuid
-
+from flasgger import Swagger
+from enum import Enum
 # Add current directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-try:
-    from assistant.assistant import ConversationalAssistant
-    from assistant.status.status import Status
-    from assistant.robot.answer_helper.tts.tts import PIPER_TTS
-    from assistant.ai_providers.ollama import Ollama
-    from assistant.files.files import Files
-    ASSISTANT_AVAILABLE = True
-except ImportError as e:
-    ASSISTANT_AVAILABLE = False
-    print(f"Assistant modules not available: {e}")
+
+
+def check_assistant_modules():
+    try:
+        from assistant.assistant import ConversationalAssistant
+        from assistant.status.status import Status
+        from assistant.robot.answer_helper.tts.tts import PIPER_TTS
+        from assistant.ai_providers.ollama import Ollama
+        from assistant.files.files import Files
+        ASSISTANT_AVAILABLE = True
+        return True
+    except ImportError as e:
+        ASSISTANT_AVAILABLE = False
+        print(f"Assistant modules not available: {e}")
+        return False
 
 # Flask app setup
 app = Flask(__name__)
+swagger = Swagger(app)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Global variables for assistant state
@@ -37,7 +44,14 @@ conversation_history = []
 current_question = ""
 current_answer = ""
 question_count = 0
-assistant_status = "idle"  # idle, listening, processing, speaking
+class AsistantStatus(Enum):
+    IDLE = "idle"
+    LISTENING = "listening"
+    PROCESSING = "processing"
+    SPEAKING = "speaking"
+    READY = "ready"
+    ERROR = "error"
+
 session_id = str(uuid.uuid4())
 
 class APIServer:
@@ -50,13 +64,13 @@ class APIServer:
         """Initialize the assistant instance"""
         global assistant_instance, assistant_status
         
-        if not ASSISTANT_AVAILABLE:
-            print("❌ Assistant not available")
+        if not check_assistant_modules():
+            print("[WARN] Assistant not available")
             return False
             
         try:
-            print("🤖 Initializing AI Assistant...")
-            status = Status()
+            print("[INFO] Initializing AI Assistant...")
+            self.status = Status()
             tts = PIPER_TTS()
             ollama = Ollama()
             files = Files()
@@ -64,28 +78,28 @@ class APIServer:
             assistant_instance = ConversationalAssistant(
                 name="API Assistant",
                 voice_config=None,
-                status=status,
+                status=self.status,
                 tts=tts,
                 ollama=ollama,
                 files=files
             )
             
             assistant_status = "ready"
-            print("✅ Assistant initialized successfully")
+            print("[SUCCESS] Assistant initialized successfully")
             return True
             
         except Exception as e:
-            print(f"❌ Failed to initialize assistant: {e}")
+            print(f"[ERROR] Failed to initialize assistant: {e}")
             assistant_status = "error"
             return False
     
     def start_assistant_background(self):
         """Start assistant in background thread"""
         if self.initialize_assistant():
-            print("🚀 Assistant running in background, ready for API calls")
+            print("[INFO] Assistant running in background, ready for API calls")
             self.running = True
         else:
-            print("❌ Failed to start assistant")
+            print("[ERROR] Failed to start assistant")
 
 # Initialize server
 server = APIServer()
@@ -145,6 +159,7 @@ def ask_assistant():
             return jsonify({
                 "status": "error",
                 "message": "Question is required"
+                
             }), 400
         
         question = data['question']
@@ -155,7 +170,7 @@ def ask_assistant():
         assistant_status = "processing"
         question_count += 1
         
-        print(f"🔍 Processing question #{question_count}: {question}")
+        print(f"[INFO] Processing question #{question_count}: {question}")
         
         # Process the question
         try:
@@ -194,7 +209,7 @@ def ask_assistant():
         except Exception as e:
             assistant_status = "error"
             error_msg = f"Error processing question: {str(e)}"
-            print(f"❌ {error_msg}")
+            print(f"[ERROR] {error_msg}")
             
             return jsonify({
                 "status": "error",
@@ -373,12 +388,15 @@ def health_check():
         "assistant_available": ASSISTANT_AVAILABLE,
         "assistant_status": assistant_status
     })
+# @app.route('/docs', methods=['GET'])
+# def docs():
 
-def start_server():
+
+def start_server(port: int, debug: bool = False, threaded: bool = True , host: str = '0.0.0.0'):
     """Start the API server"""
-    print("🚀 Starting AI Voice Assistant API Server...")
-    print("📍 Server will be available at: http://localhost:5001")
-    print("📋 API Documentation:")
+    print("[STARTUP] Starting AI Voice Assistant API Server...")
+    print(f"[STARTUP] Server will be available at: {host}:{port}")
+    print("[STARTUP] API Documentation:")
     print("   GET  /                    - Server info")
     print("   GET  /api/status          - Assistant status")
     print("   POST /api/ask             - Ask question")
@@ -393,7 +411,8 @@ def start_server():
     server.start_assistant_background()
     
     # Start Flask server
-    app.run(host='0.0.0.0', port=5001, debug=False, threaded=True)
+    app.run(host=host, port=port, debug=debug, threaded=threaded)
+
 
 if __name__ == '__main__':
-    start_server()
+    start_server(host='0.0.0.0', port=5001, debug=False, threaded=True)

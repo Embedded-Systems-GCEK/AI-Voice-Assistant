@@ -3,7 +3,7 @@ title AI Voice Assistant - Multi-Server Launcher
 
 echo.
 echo =====================================================
-echo    🤖 AI VOICE ASSISTANT - MULTI-SERVER LAUNCHER
+echo    🤖 AI VOICE ASSISTANT - UNIFIED SERVER LAUNCHER
 echo =====================================================
 echo.
 
@@ -30,24 +30,16 @@ start "API Server" cmd /k python api_server.py
 :: Wait a bit
 timeout /t 3 /nobreak >nul
 
-:: Start Main Server  
-echo 🚀 Starting Main Server (Port 5000)...
-start "Main Server" cmd /k python server/server.py
-
-:: Wait a bit
-timeout /t 3 /nobreak >nul
-
-:: Start UI Server
-echo 🚀 Starting UI Server (Port 5002)...
-start "UI Server" cmd /k python ui/server.py
+:: Start Unified Server  
+echo 🚀 Starting Unified Server (Port 5000)...
+start "Unified Server" cmd /k python server/server.py
 
 echo.
 echo ✅ All servers are starting in separate windows!
 echo.
 echo 🔗 Server URLs:
-echo    • API Server:    http://localhost:5001
-echo    • Main Server:   http://localhost:5000
-echo    • UI Server:     http://localhost:5002
+echo    • API Server:      http://localhost:5001
+echo    • Unified Server:  http://localhost:5000
 echo.
 echo 📱 Flutter Integration:
 echo    Use http://localhost:5001 as your base URL

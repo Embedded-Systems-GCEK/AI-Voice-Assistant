@@ -30,13 +30,9 @@ python launcher.py
 cd src
 python api_server.py
 
-# Terminal 2 - Main Server (Database & Core APIs)
+# Terminal 2 - Unified Server (Web UI + Database & Core APIs)
 cd src  
 python server/server.py
-
-# Terminal 3 - UI Server (Web Interface)
-cd src
-python ui/server.py
 ```
 
 ## 📊 Server Architecture
@@ -44,8 +40,7 @@ python ui/server.py
 | Server | Port | Purpose | Primary Use |
 |--------|------|---------|-------------|
 | **API Server** | 5001 | Real-time assistant API | **Flutter App** |
-| **Main Server** | 5000 | Database & Core APIs | Data persistence |
-| **UI Server** | 5002 | Web Interface | Browser UI |
+| **Unified Server** | 5000 | Web UI + Database + Core APIs | Web Browser & Data |
 
 ## 🔗 API Endpoints for Flutter
 
@@ -412,7 +407,7 @@ All endpoints return standardized JSON responses with status and error informati
 
 - **Flutter Integration Guide**: `docs/FLUTTER_INTEGRATION_GUIDE.md`
 - **Timeout Guide**: `docs/TIMEOUT_GUIDE.md` 
-- **Server Architecture**: `src/server/` and `src/ui/`
+- **Server Architecture**: Unified `src/server/` (includes web UI functionality)
 
 ---
 

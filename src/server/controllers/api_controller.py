@@ -77,8 +77,8 @@ class APIController:
                 )
                 print("Assistant initialized successfully")
             except Exception as e:
-                print(f"Failed to initialize assistant: {e}")
                 global ASSISTANT_AVAILABLE
+                print(f"Failed to initialize assistant: {e}")
                 ASSISTANT_AVAILABLE = False
     
     @staticmethod

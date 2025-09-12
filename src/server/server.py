@@ -8,6 +8,7 @@ from database.db_helper import DatabaseHelper
 from models.models import User, QuestionResponse
 import threading
 
+
 # Initialize CORS
 init_cors(app)
 
@@ -22,7 +23,23 @@ def health_check():
 
 @app.route('/')
 def index():
-    return "AI Assistant Server Backend"
+    return """
+    <h1>AI Assistant Unified Server</h1>
+    <p>This server provides both API and UI functionality.</p>
+    <h3>Available Endpoints:</h3>
+    <ul>
+        <li><strong>Health:</strong> <a href="/health">/health</a></li>
+        <li><strong>Statistics:</strong> <a href="/stats">/stats</a></li>
+        <li><strong>API Example Questions:</strong> <a href="/api/example-questions">/api/example-questions</a></li>
+        <li><strong>API Status:</strong> <a href="/api/assistant/status">/api/assistant/status</a></li>
+    </ul>
+    <h3>API Usage:</h3>
+    <ul>
+        <li><strong>POST /api/ask</strong> - Ask a question</li>
+        <li><strong>GET /api/conversation/&lt;user_id&gt;</strong> - Get conversation history</li>
+        <li><strong>POST /api/assistant/reset</strong> - Reset assistant</li>
+    </ul>
+    """
 
 # Handle preflight OPTIONS requests
 @app.before_request
@@ -104,5 +121,9 @@ def get_stats():
         return ResponseHandler.server_error(str(e))
 
 if __name__ == '__main__':
-    print("Starting AI Assistant Server...")
+    print("Starting AI Assistant Unified Server...")
+    print("This server provides both API and UI functionality")
+    print("Available on: http://localhost:5000")
+    print("API endpoints: http://localhost:5000/api/")
+    print("Health check: http://localhost:5000/health")
     app.run(host='0.0.0.0', port=5000, debug=True)
