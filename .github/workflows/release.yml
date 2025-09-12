@@ -1,0 +1,176 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run full test suite
+      run: |
+        python test_setup.py
+        echo -e "hello\nwhat can you do\nexit" | python demo.py
+    
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create release package
+      run: |
+        mkdir -p release-package
+        
+        # Copy essential files
+        cp README.md release-package/
+        cp CONTRIBUTING.md release-package/
+        cp CODE_OF_CONDUCT.md release-package/
+        cp requirements.txt release-package/
+        cp dictionaries.json release-package/
+        cp demo.py release-package/
+        cp test_setup.py release-package/
+        cp install.py release-package/
+        cp run_assistant.sh release-package/
+        cp .gitignore release-package/
+        
+        # Copy source directory
+        cp -r src release-package/
+        
+        # Copy piper directory (TTS models)
+        cp -r piper release-package/
+        
+        # Copy GitHub templates
+        mkdir -p release-package/.github
+        cp -r .github/ISSUE_TEMPLATE release-package/.github/
+        
+        # Create VERSION file
+        echo "${{ steps.version.outputs.version }}" > release-package/VERSION
+        
+        # Create release notes
+        cat > release-package/RELEASE_NOTES.md << 'EOF'
+        # AI Voice Assistant (Cyrus) ${{ steps.version.outputs.version }}
+        
+        ## 🎉 First Release
+        
+        This is the first official release of the AI Voice Assistant project!
+        
+        ## ✨ Features
+        
+        - 🎤 Voice recognition using Google Speech API
+        - 🗣️ Text-to-speech using Piper TTS
+        - 🤖 AI-powered responses via Cohere API or Ollama (offline)
+        - 📚 Custom response dictionary
+        - 🕐 Time, date, and calendar information
+        - 📋 APCI 2025 conference information
+        - 🚀 Easy installation with automated setup
+        - 🎭 Demo mode for testing without dependencies
+        
+        ## 🚀 Quick Start
+        
+        1. Download and extract this release
+        2. Run: `python install.py`
+        3. Test with: `python demo.py`
+        4. Full version: `python src/app.py`
+        
+        ## 📖 Documentation
+        
+        - See `README.md` for detailed setup instructions
+        - See `CONTRIBUTING.md` for team collaboration guidelines
+        - Run `python test_setup.py` to verify your installation
+        
+        ## 👥 Team
+        
+        **Developers:** @Nivedh-r, @dhanashyam18, @AmayaPramod, @AbhayaGovind
+        **Testers:** @Sneha-SJ-05, @MeenakshiPoyyil
+        **Designers:** @vyshnav8486, @aruncs31s
+        
+        ## 🆘 Support
+        
+        If you encounter issues:
+        1. Run `python test_setup.py` for diagnostics
+        2. Try demo mode first: `python demo.py`
+        3. Check the troubleshooting section in README.md
+        4. Report bugs using our issue templates
+        
+        EOF
+        
+        # Create archive
+        tar -czf ai-voice-assistant-${{ steps.version.outputs.version }}.tar.gz -C release-package .
+        zip -r ai-voice-assistant-${{ steps.version.outputs.version }}.zip release-package/
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Create a simple changelog from recent commits
+        git log --pretty=format:"- %s (%an)" --since="1 month ago" > CHANGELOG.md
+        
+        # If this is a manual release, add manual changelog
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "## ${{ steps.version.outputs.version }}" > temp_changelog.md
+          echo "" >> temp_changelog.md
+          echo "Manual release triggered." >> temp_changelog.md
+          echo "" >> temp_changelog.md
+          cat CHANGELOG.md >> temp_changelog.md
+          mv temp_changelog.md CHANGELOG.md
+        fi
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        release_name: AI Voice Assistant ${{ steps.version.outputs.version }}
+        body_path: release-package/RELEASE_NOTES.md
+        draft: false
+        prerelease: false
+    
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ai-voice-assistant-${{ steps.version.outputs.version }}.tar.gz
+        asset_name: ai-voice-assistant-${{ steps.version.outputs.version }}.tar.gz
+        asset_content_type: application/gzip
+    
+    - name: Upload ZIP Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ai-voice-assistant-${{ steps.version.outputs.version }}.zip
+        asset_name: ai-voice-assistant-${{ steps.version.outputs.version }}.zip
+        asset_content_type: application/zip

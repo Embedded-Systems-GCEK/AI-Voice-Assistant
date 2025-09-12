@@ -216,14 +216,34 @@ AI-Voice-Assistant/
 │   ├── ollama.py        # Ollama integration for offline AI
 │   ├── status.py        # Internet connection status
 │   └── tts.py          # Text-to-speech using Piper
+├── .github/            # GitHub templates and workflows
+│   ├── ISSUE_TEMPLATE/ # Bug reports, feature requests, etc.
+│   └── workflows/      # CI/CD automation
 ├── piper/              # Piper TTS files and models
 ├── dictionaries.json   # Pre-configured Q&A responses
 ├── requirements.txt    # Python dependencies
 ├── install.py         # Automatic installation script
 ├── demo.py           # Demo mode (no dependencies)
 ├── test_setup.py     # Setup verification script
+├── version.py        # Version management utility
+├── VERSION           # Current release version
+├── CONTRIBUTING.md   # Team collaboration guidelines
+├── CODE_OF_CONDUCT.md # Community standards
 └── README.md         # This file
 ```
+
+## 📊 Version Information
+
+Check the current version and release information:
+```bash
+python version.py info
+```
+
+This will show:
+- Current version number
+- Git commit hash
+- Git branch
+- Python version
 
 ## 📝 Configuration Files
 
@@ -246,15 +266,28 @@ COHERE_API_KEY = "your_api_key_here"
 
 ## 🤝 Contributing
 
-This project is developed by the UI team at Government College of Engineering Kannur for the APCI 2025 conference. Contributions are welcome!
+This project is developed by teams at Government College of Engineering Kannur for the APCI 2025 conference. We welcome contributions from all team members!
+
+### Team Structure
+- **👨‍💻 Developers:** @Nivedh-r, @dhanashyam18, @AmayaPramod, @AbhayaGovind
+- **🧪 Testers:** @Sneha-SJ-05, @MeenakshiPoyyil  
+- **🎨 Designers:** @vyshnav8486, @aruncs31s
+
+### Quick Contributing Guide
+1. Read our [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines
+2. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards
+3. Use our issue templates for bug reports, feature requests, and testing reports
+4. Follow the development workflow described in CONTRIBUTING.md
 
 ### Development Setup
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
 3. Run `python test_setup.py` to verify your setup
-4. Make your changes
+4. Make your changes following our coding standards
 5. Test with both `python demo.py` and full voice mode
-6. Submit a pull request
+6. Submit a pull request with clear description
+
+For detailed team-specific guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📄 License
 
