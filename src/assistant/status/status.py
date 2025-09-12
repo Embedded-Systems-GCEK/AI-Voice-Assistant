@@ -8,7 +8,18 @@ class Status:
         thread = threading.Thread(target=self.update_is_connected)
         thread.daemon = True
         thread.start()
-    
+        self._available = False
+
+    """TODO: Implement a way to check if the assistant is available
+    It should be available if it does not talking to a user and is initialized
+    2. Not Available only when its speaking.
+    """    
+    @property
+    def available(self) -> bool:
+        return self._available
+    @available.setter
+    def available(self, value: bool) -> None:
+        self._available = value
     @property
     def is_connected(self) -> bool:
         return self.connected

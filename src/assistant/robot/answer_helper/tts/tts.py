@@ -33,7 +33,7 @@ MODEL_PATH = os.path.join(".." ,PIPER_DIR, "en_US-amy-low.onnx")
 class PIPER_TTS(TTS):
     def __init__(self):
         self._text = ""
-    
+
     @property 
     def text(self) -> str:
         return self._text

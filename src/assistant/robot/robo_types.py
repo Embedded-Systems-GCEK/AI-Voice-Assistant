@@ -23,6 +23,10 @@ from dataclasses import dataclass
 from enum import Enum
 
 
+# Custom Imports
+
+from answer_helper.answer_helper import AnswerHelper
+
 class VoiceType(Enum):
     """Enumeration of available voice types"""
     DEFAULT = "default"
@@ -39,10 +43,17 @@ class Language(Enum):
 
 class ConversationState(Enum):
     """Enumeration of conversation states"""
+    """ When the robot is first initialized """
+    INITIALIZED = "initialized"
+    """ When the robot is waiting for user input """
     WAITING = "waiting"
+    """ When the robot is actively listening """
     LISTENING = "listening"
+    """ When the robot is processing input (thinking)"""
     PROCESSING = "processing"
+    """ When the robot is speaking """
     SPEAKING = "speaking"
+    """ When the robot is idle """
     IDLE = "idle"
 
 
@@ -133,11 +144,13 @@ class SPEAKING_ROBOT(BARE_ROBO):
     Extends BARE_ROBO with voice synthesis and speech functionality.
     """
 
-    def __init__(self, name: str = "Speaking Robot", voice_config: Optional[VoiceConfig] = None):
+    def __init__(self, name: str = "Speaking Robot", voice_config: Optional[VoiceConfig] = None, answer_helper: Optional[AnswerHelper] = None):
         super().__init__(name)
         self.voice_config = voice_config or VoiceConfig()
         self._is_speaking = False
         self._speech_queue = []
+        self.answer_helper = answer_helper or AnswerHelper()
+
 
     @property
     def voice_type(self) -> VoiceType:
@@ -193,7 +206,7 @@ class SPEAKING_ROBOT(BARE_ROBO):
         if not text or not text.strip():
             print("Cannot speak empty text")
             return False
-
+    
         try:
             self._is_speaking = True
             print(f"[{self.name}] Speaking: {text}")
@@ -212,8 +225,7 @@ class SPEAKING_ROBOT(BARE_ROBO):
         Internal method to perform the actual speech synthesis.
         Override this in subclasses for specific TTS implementations.
         """
-        # Default implementation - override in subclasses
-        pass
+        self.answer_helper.speak(text)
 
     def stop_speaking(self) -> None:
         """Stop current speech"""
@@ -247,8 +259,8 @@ class ASSISTANT(abc.ABC, SPEAKING_ROBOT):
     It combines speaking capabilities with listening and intelligent response features.
     """
 
-    def __init__(self, name: str = "AI Assistant", voice_config: Optional[VoiceConfig] = None):
-        super().__init__(name, voice_config)
+    def __init__(self, name: str = "AI Assistant", voice_config: Optional[VoiceConfig] = None, answer_helper: Optional[AnswerHelper] = None):
+        super().__init__(name, voice_config, answer_helper)
         self._conversation_history = []
         self._listening_mode = False
         self._wake_word = "hey assistant"
@@ -256,6 +268,9 @@ class ASSISTANT(abc.ABC, SPEAKING_ROBOT):
         self._user_name = ""
         self._timeout_seconds = 10
 
+    """
+    TODO: Implement this after , v0.1.0 Release.
+    """
     @property
     def wake_word(self) -> str:
         """Get the wake word for the assistant"""

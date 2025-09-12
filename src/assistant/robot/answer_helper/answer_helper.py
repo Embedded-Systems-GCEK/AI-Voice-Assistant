@@ -2,12 +2,12 @@
 from tts.tts import PIPER_TTS
 
 class AnswerHelper:
-    def __init__(self,):
+    def __init__(self):
+        self.id = id(self)
         self._answer = ""
         self._tts = PIPER_TTS()
         self._answer = ""
         
-
     def speak(self, text: str):
         self._tts.text = text
         # change this to a single value , var , like response or something.
