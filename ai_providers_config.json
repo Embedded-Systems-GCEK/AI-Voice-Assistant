@@ -1,0 +1,17 @@
+{
+  "gpt5": {
+    "api_key": "your-azure-openai-api-key-here",
+    "endpoint": "https://your-azure-openai-resource.openai.azure.com/",
+    "deployment_name": "gpt-5",
+    "api_version": "2024-02-15-preview",
+    "enabled": true
+  },
+  "ollama": {
+    "model": "mistral:7b",
+    "base_url": "http://localhost:11434",
+    "use_api": true,
+    "enabled": true
+  },
+  "default_provider": "ollama",
+  "fallback_enabled": true
+}
