@@ -16,7 +16,6 @@ class GoogleSTT(STT):
         self.recognizer = sr.Recognizer()
         self.state = "idle"  # listening, processing, idle
     def hear(self) -> str:
-        
         # Change state to listening
         self.state = "listening"
         try:
@@ -51,7 +50,11 @@ class GoogleSTT(STT):
         self.state = "idle"
         
         return what_i_heard
-    
+
+class GoogleSTT_with_LED(GoogleSTT):
+    def hear(self) -> str:
+        led()
+        return super().hear()
     
 
     

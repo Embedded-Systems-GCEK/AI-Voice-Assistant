@@ -6,37 +6,19 @@ Runs the assistant and exposes API endpoints for Flutter integration
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import threading
-import time
 import sys
 import os
 from datetime import datetime
 import uuid
 from flasgger import Swagger
 from enum import Enum
+
+
+# Custom Imports
+from assistant.assistant import ConversationalAssistant
 # Add current directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-
-
-def check_assistant_modules():
-    try:
-        from assistant.assistant import ConversationalAssistant
-        from assistant.status.status import Status
-        from assistant.robot.answer_helper.tts.tts import PIPER_TTS
-        from assistant.ai_providers.ollama import Ollama
-        from assistant.files.files import Files
-        ASSISTANT_AVAILABLE = True
-        return True
-    except ImportError as e:
-        ASSISTANT_AVAILABLE = False
-        print(f"Assistant modules not available: {e}")
-        return False
-
-# Flask app setup
-app = Flask(__name__)
-swagger = Swagger(app)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Global variables for assistant state
 assistant_instance = None
@@ -44,19 +26,34 @@ conversation_history = []
 current_question = ""
 current_answer = ""
 question_count = 0
-class AsistantStatus(Enum):
+
+class AsistantStatusErr(Enum):
+    FILE = "path not found"
+    NET = "network error"
+    AUTH = "authentication error"
+    ERR = "general error"
+    NONE = "no error"
+class AssistantStatus(Enum):
     IDLE = "idle"
     LISTENING = "listening"
     PROCESSING = "processing"
     SPEAKING = "speaking"
     READY = "ready"
-    ERROR = "error"
+    ERROR = AsistantStatusErr
+
+assistant_status = AssistantStatus
+
+
+# Flask app setup
+app = Flask(__name__)
+swagger = Swagger(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 session_id = str(uuid.uuid4())
 
 class APIServer:
-    def __init__(self):
-        self.assistant = None
+    def __init__(self,assistant: ConversationalAssistant ):
+        self.assistant = assistant
         self.assistant_thread = None
         self.running = False
         

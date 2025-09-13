@@ -1,7 +1,7 @@
 
-from tts.tts import PIPER_TTS,TTS
+from .stt.stt import STT
 
-class AnswerHelper:
+class QustionHelper:
     """_summary_
  
     _description_   
@@ -24,7 +24,6 @@ class AnswerHelper:
         self._tts = tts
         
     def speak(self, text: str):
-        """Set the text to be spoken and invoke the TTS engine."""
         self._tts.text = text
         # change this to a single value , var , like response or something.
         self.answer = text

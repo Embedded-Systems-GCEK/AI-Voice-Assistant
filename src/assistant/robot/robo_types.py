@@ -23,6 +23,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 
+
+
 # Custom Imports
 
 from answer_helper.answer_helper import AnswerHelper
@@ -268,6 +270,7 @@ class ASSISTANT(abc.ABC, SPEAKING_ROBOT):
         self._user_name = ""
         self._timeout_seconds = 10
 
+
     """
     TODO: Implement this after , v0.1.0 Release.
     """
@@ -463,5 +466,7 @@ class ASSISTANT(abc.ABC, SPEAKING_ROBOT):
         })
         return status
 
+    
+    
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(name='{self.name}', listening={self.is_listening}, state={self.conversation_state.value})"

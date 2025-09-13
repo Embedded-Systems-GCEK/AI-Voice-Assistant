@@ -15,7 +15,13 @@ from typing import Optional
 
 # Import the abstract base class from robo_types
 from .robot.robo_types import ASSISTANT, VoiceConfig, ConversationState
+from .robot.answer_helper.answer_helper import AnswerHelper
+from .status.status import Status
+from .files.files import Files
+from .ai_providers.ollama import Ollama
+from .robot.answer_helper.tts.tts import TTS, PIPER_TTS
 
+from .ai_providers.ollama import AiProvider
 
 class ConversationalAssistant(ASSISTANT):
     """
@@ -24,24 +30,32 @@ class ConversationalAssistant(ASSISTANT):
     a complete conversational AI assistant with speech recognition, response generation,
     and conversation management.
     """
+    
     def __init__(
         self,
+        voice_config: VoiceConfig,
+        status: Status,
+        ai_provider: AiProvider,
+        files: Files,
+        answer_helper: AnswerHelper,
+        tts: TTS,
         name: str = "Conversational Assistant",
-        voice_config: Optional[VoiceConfig] = None,
-        status=None,
-        tts=None,
-        ollama=None,
-        files=None
-        ):
-        super().__init__(name, voice_config)
+    ):
+        super().__init__(
+            name=name,
+            voice_config=voice_config,
+            answer_helper=answer_helper,
+            )
         self.status = status
-        self.tts = tts
-        self.ollama = ollama
+        self.tts = tts # PIPER_TTS() for now. 
+        self.ai_provider = ai_provider
         self.files = files
         self.recognizer = sr.Recognizer()
         self.question = ""
         self.response = ""
         self.current_prompt_index = 0
+        
+        
         
         # Default conversation prompts
         self.prompts = [
@@ -52,6 +66,7 @@ class ConversationalAssistant(ASSISTANT):
             "Tell me about your day.",
             "What are your hobbies?"
         ]
+
 
     def listen(self) -> str:
         """Listen for user input with timeout"""
@@ -285,6 +300,8 @@ class ConversationalAssistant(ASSISTANT):
         """Check if the assistant has internet connectivity"""
         return self.status.is_connected if self.status else False
 
+    def current_response(self):
+        return self.answer_helper.answer
 
 # For backward compatibility, create an alias
-Assistant = ConversationalAssistant
+# Assistant = ConversationalAssistant

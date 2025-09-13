@@ -40,12 +40,12 @@ from files import Files
 
 # Initialize components
 from src.assistant.assistant import ConversationalAssistant
-from src.assistant.status.status import Status
+from src.assistant.status.status import newStatus
 from src.assistant.robot.answer_helper.tts.tts import PIPER_TTS
 from src.assistant.ai_providers.ollama import Ollama
 from src.assistant.files.files import Files
 
-status = Status()
+status = newStatus()
 tts = PIPER_TTS()
 ollama = Ollama()
 files = Files()

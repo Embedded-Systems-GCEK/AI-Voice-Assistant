@@ -9,10 +9,18 @@ from abc import ABC, abstractmethod
 
 
 class TTS(ABC):
+    def __init__(self):
+        self._text = ""
+        self.id = id(self)
     @abstractmethod
     def speak(self) -> None:
         pass
-
+    @property 
+    def text(self) -> str:
+        return self._text
+    @text.setter
+    def text(self, text: str) -> None:
+        self._text = text
     # The 'text' property and abstractmethod for 'text' are contradictory.
     # A TTS class typically takes text as an argument to 'speak', not as a property.
     # Removing the 'text' abstractmethod and property as they don't fit the TTS interface.
@@ -32,16 +40,8 @@ MODEL_PATH = os.path.join(".." ,PIPER_DIR, "en_US-amy-low.onnx")
 
 class PIPER_TTS(TTS):
     def __init__(self):
+        super().__init__()
         self._text = ""
-
-    @property 
-    def text(self) -> str:
-        return self._text
-    
-    @text.setter
-    def text(self, text: str) -> None:
-        self._text = text
-    
     def speak(self) -> None:
         try:
             # Debug: Print paths to verify they're correct

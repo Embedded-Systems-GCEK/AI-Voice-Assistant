@@ -2,6 +2,8 @@
 import urllib.request
 import threading
 
+
+        
 class Status:
     def __init__(self):
         self.connected = False
@@ -14,6 +16,7 @@ class Status:
     It should be available if it does not talking to a user and is initialized
     2. Not Available only when its speaking.
     """    
+ 
     @property
     def available(self) -> bool:
         return self._available
@@ -36,3 +39,15 @@ class Status:
         except:
             print("No internet connection.")
             self.is_connected = False
+            
+
+class newStatus(Status):
+    def __init__(self):
+        super().__init__()
+        self.battery_level = 100  # Placeholder for battery level
+    @property
+    def battery(self) -> int:
+        return self.battery_level
+    @battery.setter
+    def battery(self, value: int) -> None:
+        self.battery_level = value

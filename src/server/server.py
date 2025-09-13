@@ -21,6 +21,11 @@ with app.app_context():
 def health_check():
     return check_health()
 
+@app.route("/ping")
+def ping():
+    return "<h1>Pong!</h1>"
+
+
 @app.route('/')
 def index():
     return """

@@ -1,19 +1,14 @@
 
 
-import subprocess
-import threading
 import sys
-import os
 import time
 from concurrent.futures import ThreadPoolExecutor
-import webbrowser
 
 # Custom imports
 from launcher.run_server import run_server
 
 def start_all_servers():
     """Start all servers concurrently"""
-    
     print("=" * 60)
     print("[STARTUP] AI VOICE ASSISTANT - MULTI-SERVER LAUNCHER")
     print("=" * 60)
@@ -86,4 +81,3 @@ def start_all_servers():
                 
         except KeyboardInterrupt:
             print("\n\n[SHUTDOWN] Shutting down all servers...")
-            # The processes will be terminated when the main process exits

@@ -4,6 +4,9 @@ from assistant.status.status import Status
 from assistant.robot.answer_helper.tts.tts import PIPER_TTS
 from assistant.ai_providers.ollama import Ollama
 from assistant.files.files import Files
+from assistant.robot.robo_types import VoiceConfig
+from assistant.robot.answer_helper import AnswerHelper
+
 
 def main():
     # Initialize all required dependencies
@@ -11,14 +14,18 @@ def main():
     tts = PIPER_TTS()  
     ollama = Ollama()
     files = Files()
-    
+    voice_config = VoiceConfig(voice="piper", language="en-US")
+    answer_helper = AnswerHelper()
+
     # Create the assistant with all dependencies
     assistant = ConversationalAssistant(
-        name="Cyrus",
         status=status,
         tts=tts,
-        ollama=ollama,
-        files=files
+        ai_provider=ollama,
+        files=files,
+        voice_config=voice_config,
+        answer_helper=answer_helper,
+        name="Cyrus",
     )
     
     # Start the assistant

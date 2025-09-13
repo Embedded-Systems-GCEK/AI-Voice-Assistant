@@ -14,6 +14,7 @@ try:
     from assistant.robot.answer_helper.tts.tts import PIPER_TTS
     from assistant.ai_providers.ollama import Ollama
     from assistant.files.files import Files
+    from assistant.robot.answer_helper import AnswerHelper
     ASSISTANT_AVAILABLE = True
 except ImportError:
     ASSISTANT_AVAILABLE = False
@@ -73,11 +74,13 @@ class APIController:
                     status=status, 
                     tts=tts, 
                     ollama=ollama, 
-                    files=files
+                    files=files,
+                    voice_config=None,
+                    answer_helper=Ans,
                 )
                 print("Assistant initialized successfully")
             except Exception as e:
-                global ASSISTANT_AVAILABLE
+                # global ASSISTANT_AVAILABLE
                 print(f"Failed to initialize assistant: {e}")
                 ASSISTANT_AVAILABLE = False
     

@@ -1,9 +1,10 @@
 from flask import request, jsonify
 from typing import Dict, Any, Tuple, Optional
 
+
+
 class RequestHandler:
     """Handler for processing incoming requests"""
-    
     @staticmethod
     def get_json_data() -> Dict[str, Any]:
         """Get JSON data from request"""
