@@ -1,0 +1,33 @@
+[
+  {
+    "provider": "GPT-5",
+    "available": false,
+    "info": {
+      "name": "GPT-5",
+      "type": "cloud",
+      "model": "GPT-5",
+      "provider": "Azure OpenAI",
+      "endpoint": "https://your-azure-openai-resource.openai.azure.com/",
+      "deployment": "gpt-5",
+      "api_version": "2024-02-15-preview",
+      "available": false,
+      "description": "GPT-5 model via Azure OpenAI API"
+    },
+    "tests": []
+  },
+  {
+    "provider": "Ollama",
+    "available": false,
+    "info": {
+      "name": "Ollama",
+      "type": "local",
+      "model": "mistral:7b",
+      "provider": "Ollama",
+      "base_url": "http://localhost:11434",
+      "method": "API",
+      "available": false,
+      "description": "Local mistral:7b model via Ollama"
+    },
+    "tests": []
+  }
+]
