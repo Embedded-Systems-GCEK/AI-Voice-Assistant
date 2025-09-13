@@ -1,19 +1,26 @@
 
 import abc
 from enum import Enum
+from datetime import datetime
+import time
 class AiProviderStatus(Enum):
     IDLE = "Idle"
     BUSY = "Busy"
     ERROR = "Error"
     OFFLINE = "Offline"
-
+class AiProviderList(Enum):
+    OLLAMA = "Ollama"
+    ALEXA = "Alexa"
+    GITHUB_GPT_5 = "GitHub GPT-5"
 class AiProvider(abc.ABC):
     def __init__(self):
         self._status = AiProviderStatus.IDLE
         """Initializing answer to empty string"""
         self._answer = ""
         self._messages = []
-        
+        self.question_asked_time = 0.0
+        self.answer_time = 0.0
+        self.response_time = 0.0
 
     @abc.abstractmethod
     def ask(self, prompt: str) -> str:
@@ -32,6 +39,10 @@ class AiProvider(abc.ABC):
     @status.setter
     def status(self, value: AiProviderStatus) -> None:
         """Property setter for status"""
+        if value == AiProviderStatus.IDLE:
+            self.answer_time = time.time()
+        if value == AiProviderStatus.BUSY:
+            self.question_asked_time = time.time()
         self._status = value
     
     @property
@@ -47,9 +58,12 @@ class AiProvider(abc.ABC):
     def messages(self) -> list[dict[str, str]]:
         """Property getter for messages"""
         return self._messages
+
     @messages.setter
     def messages(self, value: list[dict[str, str]]) -> None:
         """Property setter for messages"""
+        """ For getting question response time """
+        self.question_asked_time = time.time()
         self._messages = value
     
     def add_message(self, role: str, content: str) -> None:
@@ -81,11 +95,10 @@ class AiProvider(abc.ABC):
             'total_characters': total_chars,
             'avg_message_length': total_chars / len(self.messages) if self.messages else 0
         }
-        
-    
-
-class AiProviderList(Enum):
-    OLLAMA = "Ollama"
-    ALEXA = "Alexa"
-    GITHUB_GPT_5 = "GitHub GPT-5"
-
+    def get_response_time(self) -> float:
+        """Calculate the response time for the last operation"""
+        if self.answer_time > 0 and self.question_asked_time > 0:
+            self.response_time = self.answer_time - self.question_asked_time
+            return self.response_time
+        else:
+            return 0.0  

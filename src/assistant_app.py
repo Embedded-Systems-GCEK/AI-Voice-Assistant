@@ -4,7 +4,7 @@ from assistant.status.status import Status
 from assistant.robot.answer_helper.tts.tts import PIPER_TTS
 from assistant.ai_providers.ollama import Ollama
 from assistant.files.files import Files
-from assistant.robot.robo_types import VoiceConfig
+from src.assistant.robot.assistant_robo import VoiceConfig
 from assistant.robot.answer_helper import AnswerHelper
 
 

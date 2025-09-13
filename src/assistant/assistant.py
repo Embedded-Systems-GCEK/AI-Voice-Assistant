@@ -14,14 +14,15 @@ import time
 from typing import Optional
 
 # Import the abstract base class from robo_types
-from .robot.robo_types import ASSISTANT, VoiceConfig, ConversationState
-from .robot.answer_helper.answer_helper import AnswerHelper
-from .status.status import Status
-from .files.files import Files
-from .ai_providers.ollama import Ollama
-from .robot.answer_helper.tts.tts import TTS, PIPER_TTS
+from robot.assistant_robo import ASSISTANT, VoiceConfig, ConversationState
+from robot.answer_helper.answer_helper import AnswerHelper
+from status.status import Status
+from files.files import Files
+from ai_providers.ollama import Ollama
+from robot.answer_helper.tts.tts import TTS, PIPER_TTS
 
-from .ai_providers.ollama import AiProvider
+from ai_providers.ollama import AiProvider
+
 
 class ConversationalAssistant(ASSISTANT):
     """

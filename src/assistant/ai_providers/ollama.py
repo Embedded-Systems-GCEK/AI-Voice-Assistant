@@ -5,7 +5,7 @@ from sqlalchemy import false
 
 # custom import
 
-from .ai_providers import AiProvider, AiProviderList, AiProviderStatus
+from ai_providers import AiProvider, AiProviderList, AiProviderStatus
 class Ollama(AiProvider):
     def __init__(self):
         super().__init__()
@@ -15,17 +15,9 @@ class Ollama(AiProvider):
     def name(self) -> str:
         return AiProviderList.OLLAMA.value
     
-    @staticmethod
-    def run_ollama_command(command: str) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            command,
-            shell=True, capture_output=True, text=True
-        )
 
     def ask_ollama_api(self, message: list[dict[str, str]] | str) -> str:
         try:
-            print(f"Sending request to Ollama API with model {self.model}")
-
             # Prepare messages for Ollama API
             if isinstance(message, str):
                 # Single message
@@ -33,8 +25,6 @@ class Ollama(AiProvider):
             else:
                 # Full conversation history - send all messages for context
                 ollama_messages = message.copy()
-
-            print(f"Sending {len(ollama_messages)} messages to Ollama")
 
             response = requests.post(
                 "http://localhost:11434/api/chat/",
@@ -65,10 +55,8 @@ class Ollama(AiProvider):
         try:
             self.status = AiProviderStatus.BUSY
             self.add_message("user", prompt)
-
             # Send full conversation history for context
             self.answer = self.ask_ollama_api(self.messages)
-
             self.status = AiProviderStatus.IDLE
             return self.answer
         except Exception as e:
@@ -87,9 +75,10 @@ if __name__ == "__main__":
     ollama = Ollama()
 
     for i, q in enumerate(questions, 1):
-        print(f"\n🔹 Question {i}: {q}")
+        print(f"\n🐸 Arun > {q}")
         answer = ollama.ask(q)
-        print(f"🤖 Answer {i}: {answer}")
+        print(f"🤖 Ollama > {answer}")
+        print(f"⏳ Response Time {i}: {ollama.get_response_time():.2f} seconds")
 
     print("\n" + "=" * 50)
     print("📚 FULL CONVERSATION HISTORY:")

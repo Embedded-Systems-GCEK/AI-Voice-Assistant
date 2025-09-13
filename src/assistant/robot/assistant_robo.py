@@ -16,241 +16,14 @@ import abc
 import speech_recognition as sr
 import datetime
 import re
-import threading
-import time
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from dataclasses import dataclass
-from enum import Enum
-
-
-
 
 # Custom Imports
 
 from answer_helper.answer_helper import AnswerHelper
-
-class VoiceType(Enum):
-    """Enumeration of available voice types"""
-    DEFAULT = "default"
-    MALE = "male"
-    FEMALE = "female"
-    ROBOTIC = "robotic"
-    NATURAL = "natural"
-
-
-class Language(Enum):
-    """Enumeration of supported languages"""
-    ENGLISH_US = "en-US"
-    MALAYALAM = "ml-IN"
-
-class ConversationState(Enum):
-    """Enumeration of conversation states"""
-    """ When the robot is first initialized """
-    INITIALIZED = "initialized"
-    """ When the robot is waiting for user input """
-    WAITING = "waiting"
-    """ When the robot is actively listening """
-    LISTENING = "listening"
-    """ When the robot is processing input (thinking)"""
-    PROCESSING = "processing"
-    """ When the robot is speaking """
-    SPEAKING = "speaking"
-    """ When the robot is idle """
-    IDLE = "idle"
-
-
-@dataclass
-class VoiceConfig:
-    """Configuration class for voice settings"""
-    voice_type: VoiceType = VoiceType.DEFAULT
-    language: Language = Language.ENGLISH_US
-    speed: float = 1.0
-    pitch: float = 1.0
-    volume: float = 1.0
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert voice config to dictionary"""
-        return {
-            'voice_type': self.voice_type.value,
-            'language': self.language.value,
-            'speed': self.speed,
-            'pitch': self.pitch,
-            'volume': self.volume
-        }
-
-
-class BARE_ROBO:
-    """
-    Basic robot class with fundamental properties.
-
-    This is the foundation class that provides basic robot functionality
-    like naming and identification.
-    """
-
-    def __init__(self, name: str = "Default Robot"):
-        self._name = name
-        self._id = id(self)  # Unique identifier
-        self._is_active = True
-        self._created_at = None  # Can be set by subclasses
-
-    @property
-    def name(self) -> str:
-        """Get the robot's name"""
-        return self._name
-
-    @name.setter
-    def name(self, value: str) -> None:
-        """Set the robot's name"""
-        if not value or not value.strip():
-            raise ValueError("Robot name cannot be empty")
-        self._name = value.strip()
-
-    @property
-    def robot_id(self) -> int:
-        """Get the unique robot identifier"""
-        return self._id
-
-    @property
-    def is_active(self) -> bool:
-        """Check if the robot is active"""
-        return self._is_active
-
-    def activate(self) -> None:
-        """Activate the robot"""
-        self._is_active = True
-
-    def deactivate(self) -> None:
-        """Deactivate the robot"""
-        self._is_active = False
-
-    def get_status(self) -> Dict[str, Any]:
-        """Get the current status of the robot"""
-        return {
-            'name': self.name,
-            'id': self.robot_id,
-            'active': self.is_active,
-            'type': self.__class__.__name__
-        }
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}(name='{self.name}', id={self.robot_id})"
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
-
-class SPEAKING_ROBOT(BARE_ROBO):
-    """
-    Speaking robot class with voice capabilities.
-
-    Extends BARE_ROBO with voice synthesis and speech functionality.
-    """
-
-    def __init__(self, name: str = "Speaking Robot", voice_config: Optional[VoiceConfig] = None, answer_helper: Optional[AnswerHelper] = None):
-        super().__init__(name)
-        self.voice_config = voice_config or VoiceConfig()
-        self._is_speaking = False
-        self._speech_queue = []
-        self.answer_helper = answer_helper or AnswerHelper()
-
-
-    @property
-    def voice_type(self) -> VoiceType:
-        """Get the current voice type"""
-        return self.voice_config.voice_type
-
-    @voice_type.setter
-    def voice_type(self, value: VoiceType) -> None:
-        """Set the voice type"""
-        self.voice_config.voice_type = value
-
-    @property
-    def language(self) -> Language:
-        """Get the current language"""
-        return self.voice_config.language
-
-    @language.setter
-    def language(self, value: Language) -> None:
-        """Set the language"""
-        self.voice_config.language = value
-
-    @property
-    def speaking_speed(self) -> float:
-        """Get the speaking speed"""
-        return self.voice_config.speed
-
-    @speaking_speed.setter
-    def speaking_speed(self, value: float) -> None:
-        """Set the speaking speed (0.5 to 2.0)"""
-        if not 0.1 <= value <= 3.0:
-            raise ValueError("Speaking speed must be between 0.1 and 3.0")
-        self.voice_config.speed = value
-
-    @property
-    def is_speaking(self) -> bool:
-        """Check if the robot is currently speaking"""
-        return self._is_speaking
-
-    def speak(self, text: str) -> bool:
-        """
-        Speak the given text.
-
-        Args:
-            text: The text to speak
-
-        Returns:
-            bool: True if speech was successful, False otherwise
-        """
-        if not self.is_active:
-            print(f"{self.name} is not active and cannot speak")
-            return False
-
-        if not text or not text.strip():
-            print("Cannot speak empty text")
-            return False
-    
-        try:
-            self._is_speaking = True
-            print(f"[{self.name}] Speaking: {text}")
-            # Here you would integrate with actual TTS engine
-            # For now, we'll just simulate speaking
-            self._perform_speech(text)
-            self._is_speaking = False
-            return True
-        except Exception as e:
-            print(f"Speech error: {e}")
-            self._is_speaking = False
-            return False
-
-    def _perform_speech(self, text: str) -> None:
-        """
-        Internal method to perform the actual speech synthesis.
-        Override this in subclasses for specific TTS implementations.
-        """
-        self.answer_helper.speak(text)
-
-    def stop_speaking(self) -> None:
-        """Stop current speech"""
-        self._is_speaking = False
-        print(f"{self.name} stopped speaking")
-
-    def get_voice_config(self) -> Dict[str, Any]:
-        """Get the current voice configuration"""
-        return self.voice_config.to_dict()
-
-    def set_voice_config(self, config: VoiceConfig) -> None:
-        """Set the voice configuration"""
-        self.voice_config = config
-
-    def get_status(self) -> Dict[str, Any]:
-        """Get the current status including voice information"""
-        status = super().get_status()
-        status.update({
-            'voice_config': self.get_voice_config(),
-            'speaking': self.is_speaking,
-            'speech_queue_size': len(self._speech_queue)
-        })
-        return status
+from question_helper.question_helper import QuestionHelper
+from talking_robo import SPEAKING_ROBOT, VoiceConfig , ConversationState
 
 
 class ASSISTANT(abc.ABC, SPEAKING_ROBOT):
@@ -261,8 +34,19 @@ class ASSISTANT(abc.ABC, SPEAKING_ROBOT):
     It combines speaking capabilities with listening and intelligent response features.
     """
 
-    def __init__(self, name: str = "AI Assistant", voice_config: Optional[VoiceConfig] = None, answer_helper: Optional[AnswerHelper] = None):
-        super().__init__(name, voice_config, answer_helper)
+    def __init__(self, 
+        voice_config: VoiceConfig ,
+        answer_helper: AnswerHelper,
+        question_helper: QuestionHelper,
+        name: str = "AI Assistant",
+        ):
+        super().__init__(
+            name=name,
+            voice_config=voice_config,
+            answer_helper=answer_helper,
+            question_helper=question_helper,
+            )
+        self.id = id(self) 
         self._conversation_history = []
         self._listening_mode = False
         self._wake_word = "hey assistant"
@@ -270,10 +54,10 @@ class ASSISTANT(abc.ABC, SPEAKING_ROBOT):
         self._user_name = ""
         self._timeout_seconds = 10
 
-
     """
     TODO: Implement this after , v0.1.0 Release.
     """
+    
     @property
     def wake_word(self) -> str:
         """Get the wake word for the assistant"""

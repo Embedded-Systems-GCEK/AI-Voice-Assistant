@@ -1,66 +1,44 @@
 import abc
 
+from enum import Enum
 
+class STTState(Enum):
+    IDLE = "idle"
+    LISTENING = "listening"
+    PROCESSING = "processing"
+    ERR = "error"
 class STT(abc.ABC):
+    def __init__(self):
+        self._state = STTState.IDLE
+        self._name = "Abstract STT"
+        
     @abc.abstractmethod
     def hear(self) -> str:
+        self._state = STTState.LISTENING
+        pass
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
         pass
     
-import speech_recognition as sr
-
-
-
-
-class GoogleSTT(STT):
-    def __init__(self):
-        self.recognizer = sr.Recognizer()
-        self.state = "idle"  # listening, processing, idle
-    def hear(self) -> str:
-        # Change state to listening
-        self.state = "listening"
-        try:
-            with sr.Microphone() as source:
-                self.recognizer.pause_threshold = 0.5
-                # Listen with timeout
-                audio = self.recognizer.listen(source, timeout=self.timeout_seconds, phrase_time_limit=6)
-            
-            try:
-                command = self.recognizer.recognize_google(audio, language='en-US')
-                print(f"You said: {command}")
-                self.conversation_state = "processing"
-                return command.lower()
-            except sr.UnknownValueError:
-                self.speak("Sorry, I didn't catch that. Could you repeat?")
-                return ""
-            except sr.RequestError:
-                self.speak("Speech service is unavailable.")
-                return ""
-                
-        except sr.WaitTimeoutError:
-            print("No speech detected within timeout period")
-            self.conversation_state = "waiting"
-            return ""
-        except Exception as e:
-            print(f"Error during listening: {e}")
-            return ""
-        
-        
-        # Placeholder implementation
-        # Change state back to idle.
-        self.state = "idle"
-        
-        return what_i_heard
-
-class GoogleSTT_with_LED(GoogleSTT):
-    def hear(self) -> str:
-        led()
-        return super().hear()
-    
-
-    
     @property
-    def state(self) -> str:
+    def state(self) -> STTState:
         return self._state
     @state.setter
-    def state(self, value: str) -> None:
-        self._state = value
+    def state(self, new_state: STTState):
+        self._state = new_state
+
+    def reset(self) -> None:
+        """Reset the STT state to idle"""
+        self._state = STTState.IDLE
+    
+
+    def is_listening(self) -> bool:
+        """Check if currently listening"""
+        return self._state == STTState.LISTENING
+
+    def is_processing(self) -> bool:
+        """Check if currently processing speech"""
+        return self._state == STTState.PROCESSING
+    def __str__(self) -> str:
+        return f"name={self.name}, state={self.state}"
