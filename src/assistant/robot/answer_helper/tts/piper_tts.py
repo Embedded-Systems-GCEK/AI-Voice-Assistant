@@ -4,8 +4,21 @@ import os
 import platform
 import winsound
 import threading
+from enum import Enum
 
-from tts import TTS, TTSState
+from .tts import TTS
+
+# For Testing
+import time
+class PiperState(Enum):
+    """When Doing Nothin"""
+    IDLE = "idle"
+    """When Processing , like generating wav file."""
+    PROCESSING = "processing"
+    """When Speaking"""
+    SPEAKING = "speaking"
+    ERROR = "error"
+
 
 # Base directory = project root directory (go up from tts.py location)
 BASE_DIR =  os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))))
@@ -25,16 +38,27 @@ class PIPER_TTS(TTS):
         super().__init__()
         self._text = ""
         self._thread = None
+        self.piper_state = PiperState.IDLE
+
+    @property
+    def piper_state(self) -> PiperState:
+        return self._piper_state
+
+    @piper_state.setter
+    def piper_state(self, new_state: PiperState):
+        self._piper_state = new_state
+
 
     def speak(self, text: str) -> None:
         super().speak(text)
-        self._thread = threading.Thread(target=self._speak_internal, args=(text,))
+        self.piper_state = PiperState.PROCESSING
+        self._thread = threading.Thread(target=self._speak_internal)
         self._thread.start()
 
-    def _speak_internal(self, text: str) -> None:
+    def _speak_internal(self) -> None:
         try:
             if not os.path.exists(PIPER_PATH) or not os.path.exists(MODEL_PATH):
-                self.state = TTSState.ERROR
+                self.piper_state = PiperState.ERROR
                 print("Missing Piper or model")
                 return
             
@@ -42,30 +66,29 @@ class PIPER_TTS(TTS):
                 wav_path = tmp.name
             result = subprocess.run(
                 [PIPER_PATH, "--model", MODEL_PATH, "--output_file", wav_path],
-                input=text,
+                input=self.text,
                 text=True,
                 capture_output=True
             )
-
             if result.returncode != 0:
-                self.state = TTSState.ERROR
+                self.piper_state = PiperState.ERROR
                 print("[TTS Error] Piper failed:", result.stderr)
                 return
-
-            self.state = TTSState.SPEAKING
+            self.piper_state = PiperState.SPEAKING
             if platform.system() == "Windows":
                 winsound.PlaySound(wav_path, winsound.SND_FILENAME)
             else:
                 player = "afplay" if platform.system() == "Darwin" else "aplay"
                 subprocess.run([player, wav_path])
 
-            self.state = TTSState.IDLE
+            self.piper_state = PiperState.IDLE
+            self.done_speaking()
             # Spawn a thread just for cleanup
             threading.Thread(target=self.remove_wav_file, args=(wav_path,), daemon=True).start()
 
 
         except Exception as e:
-            self.state = TTSState.ERROR
+            self.piper_state = PiperState.ERROR
             print("[TTS Error]", e)
     def remove_wav_file(self, wav_path: str) -> None:
             """Delete wav file in a background thread"""
@@ -76,7 +99,7 @@ class PIPER_TTS(TTS):
             except Exception as e:
                 print(f"[TTS Cleanup Error] Could not delete {wav_path}: {e}")
     def is_done(self) -> bool:
-        return self.state == TTSState.IDLE and (self._thread is None or not self._thread.is_alive())
+        return self.piper_state == PiperState.IDLE and (self._thread is None or not self._thread.is_alive())
     
     
 
@@ -84,7 +107,8 @@ def test_any_tts():
     tts = PIPER_TTS()
     tts.speak("Hello, this is a test of the Piper Text-to-Speech system.")
     while not tts.is_done():
-        pass
+        print(tts.piper_state)
+        time.sleep(0.4)
     print("Test finished.")
 
 if __name__ == "__main__":

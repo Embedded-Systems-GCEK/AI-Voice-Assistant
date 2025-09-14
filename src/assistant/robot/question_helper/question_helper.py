@@ -1,6 +1,6 @@
 
-from stt.stt import STT
-from stt.google_stt import GoogleSTT
+from .stt.stt import STT
+from .stt.google_stt import GoogleSTT
 from enum import Enum
 
 class QuestionHelperState(Enum):
@@ -38,11 +38,11 @@ class QuestionHelper:
         self._stt = stt
 
     
-    def hear(self) -> str:
+    def hear(self):
         self.state = QuestionHelperState.LISTENING
-        spoken_words = self._stt.hear()
+        self._stt.hear()
+        self.question  = self.stt.text 
         self.state = QuestionHelperState.IDLE
-        return spoken_words
     
     @property
     def state(self) -> QuestionHelperState:

@@ -1,7 +1,8 @@
 import speech_recognition as sr
-from speech_recognition.recognizers.google import Alternative
+
 # Custom Imports
-from stt import STT, STTState , ConversationState
+from .stt import STT, STTState 
+
 
 
 class GoogleSTT(STT):
@@ -15,17 +16,19 @@ class GoogleSTT(STT):
         # Type is infered as int for the method , fix it later , {contribute}
         self.adjust_for_ambient_noise_duration = 0.5
         self.recognizer_pause_threshold = 0.5
+        
+        self.state = STTState.IDLE
 
     @property
     def name(self) -> str:
         return "Google Speech-to-Text"
-    def hear(self) -> str:
+    def hear(self):
         super().hear()
         # Change state to listening
         try:
             with sr.Microphone() as source:
                 # Adjust for ambient noise
-                self.conversation_state = ConversationState.LISTENING
+                self.state = STTState.LISTENING
                 self.recognizer.adjust_for_ambient_noise(source, duration=self.adjust_for_ambient_noise_duration)
                 self.recognizer.pause_threshold = self.recognizer_pause_threshold
                 print("🎤 Listening... (speak now)")
@@ -37,28 +40,21 @@ class GoogleSTT(STT):
                 """TODO: Fix this : Attribute "recognize_legacy" is unknown"""
                 command = self.recognizer.recognize_google(audio, language='en-US')
                 print(f"✅ You said: {command}")
-                self.conversation_state = ConversationState.PROCESSING
-                self._state = STTState.PROCESSING
-                return command.lower()
+                self.state = STTState.PROCESSING
+                self.text = command.lower()
             except sr.UnknownValueError:
                 print("❌ Sorry, I didn't catch that. Could you repeat?")
-                self._state = STTState.ERR
-                return ""
+                self.state = STTState.ERR
             except sr.RequestError as e:
                 print(f"❌ Speech service error: {e}")
-                self._state = STTState.ERR
-                return ""
+                self.state = STTState.ERR
 
         except sr.WaitTimeoutError:
             print("⏰ No speech detected within timeout period")
-            self.conversation_state = ConversationState.WAITING
             self._state = STTState.IDLE
-            return ""
         except Exception as e:
             print(f"❌ Error during listening: {e}")
-
-            self._state = STTState.ERR
-            return ""
+            self.state = STTState.ERR
 
 
 if __name__ == "__main__":

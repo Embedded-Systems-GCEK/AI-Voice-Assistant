@@ -1,14 +1,13 @@
-from typing import Optional, Dict, Any
+from typing import  Dict, Any
 from dataclasses import dataclass
 from enum import Enum
 
 # Custom Imports
-from bare_robo import BARE_ROBO
-from answer_helper.answer_helper import AnswerHelper    
-from question_helper.question_helper import QuestionHelper
+from .bare_robo import BARE_ROBO
+from .answer_helper.answer_helper import AnswerHelper    
+from .question_helper.question_helper import QuestionHelper
 
-
-
+import threading, time
 class VoiceType(Enum):
     """Enumeration of available voice types"""
     DEFAULT = "default"
@@ -18,7 +17,8 @@ class VoiceType(Enum):
     NATURAL = "natural"
 
 
-class ConversationState(Enum):
+
+class TalkingRoboState(Enum):
     """Enumeration of conversation states"""
     """ When the robot is first initialized """
     INITIALIZED = "initialized"
@@ -26,8 +26,6 @@ class ConversationState(Enum):
     WAITING = "waiting"
     """ When the robot is actively listening """
     LISTENING = "listening"
-    """ When the robot is processing input (thinking)"""
-    PROCESSING = "processing"
     """ When the robot is speaking """
     SPEAKING = "speaking"
     """ When the robot is idle """
@@ -75,7 +73,7 @@ class SPEAKING_ROBOT(BARE_ROBO):
                  name: str = "Speaking Robot",
                  ):
         super().__init__(name)
-        self.state = ConversationState.INITIALIZED
+        self.state = TalkingRoboState.INITIALIZED
         self._is_speaking = False
         self.voice_config = voice_config 
         self._speech_queue = []
@@ -118,36 +116,28 @@ class SPEAKING_ROBOT(BARE_ROBO):
     @property
     def is_speaking(self) -> bool:
         """Check if the robot is currently speaking"""
-        is_tts_working = self.answer_helper.tts.state
-        return self._is_speaking
+        return self.answer_helper.tts.is_speaking()
 
-    def speak(self, text: str) -> bool:
-        """
-        Speak the given text.
 
-        Args:
-            text: The text to speak
-
-        Returns:
-            bool: True if speech was successful, False otherwise
-        """
-        if not self.is_active:
-            return False
-
-        if not text or not text.strip():
-            return False
-        self.state = ConversationState.SPEAKING
-    
+    def update_state(self):
+        """Update the status of the robot"""
+        while self.answer_helper.is_speaking():
+            if self.answer_helper.is_speaking():
+                self.state = ConversationState.SPEAKING
+            else:
+                self.state = ConversationState.IDLE
+    def listen(self):   
+        self.state = TalkingRoboState.LISTENING
+        """Listen for user input with timeout"""
+        self.question_helper.hear()
+     
+    def speak(self, text: str):
         try:
-            self._is_speaking = True
             self._perform_speech(text)
-            self.state = ConversationState.IDLE
-            self._is_speaking = False
-            return True
+            threading.Thread(target=self.update_state, daemon=True).start()
         except Exception as e:
+            print(f"Error during speaking: {e}")
             self.state = ConversationState.ERROR
-            self._is_speaking = False
-            return False
 
     def _perform_speech(self, text: str) -> None:
         """
@@ -179,10 +169,28 @@ class SPEAKING_ROBOT(BARE_ROBO):
         })
         return status
     @property
-    def state(self) -> ConversationState:
-        if self._state == ConversationState.SPEAKING and self.answer_helper.tts.state == TTSState.SPEAKING:
-            return ConversationState.SPEAKING
+    def state(self) -> TalkingRoboState:
+        if self._state == TalkingRoboState.SPEAKING and self.answer_helper.tts.state == TTSState.SPEAKING:
+            return TalkingRoboState.SPEAKING
         return self._state
     @state.setter
-    def state(self, value: ConversationState) -> None:
+    def state(self, value: TalkingRoboState) -> None:
+        print(f"Talking Robo State {self.state}")
         self._state = value
+        
+
+def test_talking_robot():
+    answer_helper = AnswerHelper()
+    question_helper = QuestionHelper()
+    voice_config = VoiceConfig()
+    robot = SPEAKING_ROBOT(
+        voice_config,
+        answer_helper,
+        question_helper,
+        name="Test Robot")
+    robot.speak("Hello, I am your speaking robot.")
+    print(robot.get_status())
+
+
+if __name__ == "__main__":
+    test_talking_robot()

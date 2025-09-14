@@ -11,7 +11,13 @@ class STT(abc.ABC):
     def __init__(self):
         self._state = STTState.IDLE
         self._name = "Abstract STT"
-        
+        self._text = ""
+    @property
+    def text(self) -> str:
+        return self._text
+    @text.setter
+    def text(self, text: str) -> None:
+        self._text = text
     @abc.abstractmethod
     def hear(self) -> str:
         self._state = STTState.LISTENING

@@ -7,10 +7,9 @@ class TTSState(Enum):
     """When Doing Nothin"""
     IDLE = "idle"
     PROCESSING = "processing"
-    """When Speaking"""
-    SPEAKING = "speaking"
+    # """When Speaking"""
+    # SPEAKING = "speaking"
     """When Something is Wrong"""
-    ERROR = "Error"
     
     
 
@@ -24,6 +23,7 @@ class TTS(ABC):
         """Abstract method to perform text-to-speech synthesis"""
         self.text = text
         self._state = TTSState.PROCESSING
+
 
     @property
     def text(self) -> str:
@@ -43,4 +43,9 @@ class TTS(ABC):
     def __str__(self) -> str:
         return f"TTS(id={self.id}, text='{self.text}')"
     
+    def is_speaking(self) -> bool:
+        return self.state == TTSState.PROCESSING
 
+    
+    def done_speaking(self) -> None:
+        self.state = TTSState.IDLE
