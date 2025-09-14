@@ -8,6 +8,7 @@ import asyncio
 import aiohttp
 import time
 import json
+import logging
 from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -366,7 +367,8 @@ def create_flask_app(assistant_api_url: str = "http://localhost:5001"):
                 }
             })
         except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            logging.exception("Exception in /api/status endpoint")
+            return jsonify({'status': 'error', 'message': 'An internal error has occurred.'}), 500
     
     @app.route('/api/ask', methods=['POST'])
     def api_ask():
@@ -390,7 +392,8 @@ def create_flask_app(assistant_api_url: str = "http://localhost:5001"):
                 }
             })
         except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            logging.exception("Exception in /api/ask endpoint")
+            return jsonify({'status': 'error', 'message': 'An internal error has occurred.'}), 500
     
     @app.route('/api/conversation')
     def api_conversation():
@@ -416,7 +419,8 @@ def create_flask_app(assistant_api_url: str = "http://localhost:5001"):
                 }
             })
         except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            logging.exception("Exception in /api/conversation endpoint")
+            return jsonify({'status': 'error', 'message': 'An internal error has occurred.'}), 500
     
     @app.route('/api/reset', methods=['POST'])
     def api_reset():
@@ -425,7 +429,8 @@ def create_flask_app(assistant_api_url: str = "http://localhost:5001"):
             result = client.reset_conversation()
             return jsonify({'status': 'success', 'data': result})
         except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            logging.exception("Exception in /api/reset endpoint")
+            return jsonify({'status': 'error', 'message': 'An internal error has occurred.'}), 500
     
     @app.route('/health')
     def health():
