@@ -37,9 +37,6 @@ def demonstrate_timeout():
     print("-" * 60)
     
     # Mock the assistant components
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     
     # Replace the ask_cohere function temporarily
     import builtins
