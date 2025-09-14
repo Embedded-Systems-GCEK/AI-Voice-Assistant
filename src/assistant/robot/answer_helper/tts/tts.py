@@ -1,7 +1,7 @@
 
 from enum import Enum
 from abc import ABC, abstractmethod
-    
+import threading
     
 class TTSState(Enum):
     """Represents the state of the TTS engine.
@@ -21,12 +21,19 @@ class TTS(ABC):
         self._text = ""
         self._state = TTSState.IDLE
         self.id = id(self)
+        self._thread = None
+        
     @abstractmethod
     def speak(self,text: str) -> None:
         """Abstract method to perform text-to-speech synthesis"""
         self.text = text
         self._state = TTSState.PROCESSING
-
+        
+    @property
+    @abstractmethod
+    def thread(self) -> threading.Thread | None:
+        print(f"🤖 Speaking thread with id {id(self._thread)} ")
+        pass
 
     @property
     def text(self) -> str:

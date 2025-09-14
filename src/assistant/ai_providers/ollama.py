@@ -1,22 +1,25 @@
 import subprocess
-
 import requests
-from sqlalchemy import false
 
 # custom import
-
-from ai_providers import AiProvider, AiProviderList, AiProviderStatus
-class Ollama(AiProvider):
+try:
+    from .ai_providers import AIProvider, AiProviderList, AiProviderStatus
+except ImportError:
+    from ai_providers import AIProvider, AiProviderList, AiProviderStatus
+    
+class Ollama(AIProvider):
     def __init__(self):
         super().__init__()
         self.model: str = "tinyllama"
+        # Override base class defaults for Ollama
+        self.temperature = 0
 
     @property
     def name(self) -> str:
         return AiProviderList.OLLAMA.value
     
-
-    def ask_ollama_api(self, message: list[dict[str, str]] | str) -> str:
+    def _call_api(self, message: list[dict[str, str]] | str) -> str:
+        """Implementation of the abstract _call_api method for Ollama"""
         try:
             # Prepare messages for Ollama API
             if isinstance(message, str):
@@ -33,7 +36,7 @@ class Ollama(AiProvider):
                     "messages": ollama_messages,  # Send full conversation history
                     "stream": False,
                     "options": {
-                        "temperature": 0
+                        "temperature": self.temperature
                     }
                 },
             )
@@ -50,21 +53,21 @@ class Ollama(AiProvider):
         except requests.RequestException as e:
             self.status = AiProviderStatus.ERROR
             return f"Error communicating with Ollama API: {e}"
+
+    def ask_ollama_api(self, message: list[dict[str, str]] | str) -> str:
+        """Legacy method - now delegates to _call_api"""
+        return self._call_api(message)
     
     def ask(self, prompt: str) -> str:
-        try:
-            self.status = AiProviderStatus.BUSY
-            self.add_message("user", prompt)
-            # Send full conversation history for context
-            self.answer = self.ask_ollama_api(self.messages)
-            self.status = AiProviderStatus.IDLE
-            return self.answer
-        except Exception as e:
-            self.status = AiProviderStatus.ERROR
-            return f"Error communicating with Ollama: {e}"
+        """Use the generic ask implementation from base class"""
+        # Call parent ask method to handle message logging and stop checks
+        super().ask(prompt)
+        # Use generic ask for the actual API call
+        return self._generic_ask(prompt)
 
 if __name__ == "__main__":
-    print("🤖 Testing Ollama with Memory/Context")
+    
+    print(f"🤖 Testing {str(Ollama.name).capitalize()} with Memory/Context")
     print("=" * 50)
 
     questions = [
@@ -78,7 +81,7 @@ if __name__ == "__main__":
         print(f"\n🐸 Arun > {q}")
         answer = ollama.ask(q)
         print(f"🤖 Ollama > {answer}")
-        print(f"⏳ Response Time {i}: {ollama.get_response_time():.2f} seconds")
+        print(f"⏳ Response Time {i}: {ollama.response_time:.2f} seconds")
 
     print("\n" + "=" * 50)
     print("📚 FULL CONVERSATION HISTORY:")
@@ -90,5 +93,9 @@ if __name__ == "__main__":
         print(f"  {key.replace('_', ' ').title()}: {value}")
 
     print("\n🧹 Clearing conversation history...")
+    print()
+    for obj in ollama.QandAs:
+        print(obj.to_dict())
+    
     ollama.clear_messages()
     ollama.show_conversation_history()

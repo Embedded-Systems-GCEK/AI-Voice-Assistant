@@ -3,9 +3,14 @@ from dataclasses import dataclass
 from enum import Enum
 
 # Custom Imports
-from .bare_robo import BARE_ROBO
-from .answer_helper.answer_helper import AnswerHelper    
-from .question_helper.question_helper import QuestionHelper
+try:
+    from .bare_robo import BARE_ROBO
+    from .answer_helper.answer_helper import AnswerHelper    
+    from .question_helper.question_helper import QuestionHelper
+except ImportError:
+    from bare_robo import BARE_ROBO
+    from answer_helper.answer_helper import AnswerHelper
+    from question_helper.question_helper import QuestionHelper
 
 import threading, time
 class VoiceType(Enum):
@@ -67,18 +72,96 @@ class SPEAKING_ROBOT(BARE_ROBO):
     """
 
     def __init__(self,
-                 voice_config: VoiceConfig,
-                 answer_helper: AnswerHelper ,
-                 question_helper: QuestionHelper,
+                 answer_helper: AnswerHelper = AnswerHelper() ,
+                 question_helper: QuestionHelper = QuestionHelper(),
+                 voice_config: VoiceConfig = VoiceConfig(), # Use Default Config
                  name: str = "Speaking Robot",
                  ):
         super().__init__(name)
-        self.state = TalkingRoboState.INITIALIZED
-        self._is_speaking = False
+        self._state = TalkingRoboState.INITIALIZED
+        self.question = ""
         self.voice_config = voice_config 
-        self._speech_queue = []
         self.answer_helper = answer_helper
         self.question_helper = question_helper 
+
+
+    def update_state(self):
+        """Update the status of the robot"""
+        """TODO: If this only have to do it while speaking."""
+        while self.answer_helper.is_answering():
+            if self.answer_helper.is_answering():
+                self.state = TalkingRoboState.SPEAKING
+            else:
+                self.state = TalkingRoboState.IDLE
+    def listen(self):   
+        self.state = TalkingRoboState.LISTENING
+        """Listen for user input with timeout"""
+        self.question_helper.hear()
+        self.question = self.question_helper.question
+     
+    def speak(self,string: str = "") -> None:
+        """Talking Robot Has no processing capability"""
+        """So it speaks the same"""
+        self.state = TalkingRoboState.SPEAKING
+        print(f"{self.name} is {self.state.value}")
+        self.answer = string if string else self.question
+        try:
+            self._perform_speech()
+            threading.Thread(target=self.update_state, daemon=True).start()
+            self.state = TalkingRoboState.IDLE
+        except Exception as e:
+            print(f"Error during speaking: {e}")
+            self.state = TalkingRoboState.ERROR
+        
+
+    def _perform_speech(self) -> None:
+        """
+        Internal method to perform the actual speech synthesis.
+        Override this in subclasses for specific TTS implementations.
+        """
+        self.answer_helper.speak(self.answer)
+
+    def stop_speaking(self) -> None:
+        """Stop current speech"""
+        self._is_speaking = False
+        print(f"{self.name} stopped speaking")
+
+    def get_voice_config(self) -> Dict[str, Any]:
+        """Get the current voice configuration"""
+        return self.voice_config.to_dict()
+
+    def set_voice_config(self, config: VoiceConfig) -> None:
+        """Set the voice configuration"""
+        self.voice_config = config
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get the current status including voice information"""
+        status = super().get_status()
+        status.update({
+            'voice_config': self.get_voice_config(),
+            'speaking': self.is_speaking,
+        })
+        return status
+    @property
+    def robot_state(self) -> TalkingRoboState:
+        if self._state == TalkingRoboState.SPEAKING and self.answer_helper.is_answering():
+            return TalkingRoboState.SPEAKING
+        return self._state
+    @robot_state.setter
+    def robot_state(self, value: TalkingRoboState) -> None:
+        self._state = value
+    
+    @property
+    def get_speaking_thread(self) -> threading.Thread | None:
+        return self.answer_helper.tts.thread
+    
+    @property
+    def question(self) -> str:
+        return self._question
+    @question.setter
+    def question(self, value: str) -> None:
+        self._question = value
+              
 
 
     @property
@@ -116,81 +199,30 @@ class SPEAKING_ROBOT(BARE_ROBO):
     @property
     def is_speaking(self) -> bool:
         """Check if the robot is currently speaking"""
-        return self.answer_helper.tts.is_speaking()
+        return self.answer_helper.is_answering()
 
-
-    def update_state(self):
-        """Update the status of the robot"""
-        while self.answer_helper.is_speaking():
-            if self.answer_helper.is_speaking():
-                self.state = ConversationState.SPEAKING
-            else:
-                self.state = ConversationState.IDLE
-    def listen(self):   
-        self.state = TalkingRoboState.LISTENING
-        """Listen for user input with timeout"""
-        self.question_helper.hear()
-     
-    def speak(self, text: str):
-        try:
-            self._perform_speech(text)
-            threading.Thread(target=self.update_state, daemon=True).start()
-        except Exception as e:
-            print(f"Error during speaking: {e}")
-            self.state = ConversationState.ERROR
-
-    def _perform_speech(self, text: str) -> None:
-        """
-        Internal method to perform the actual speech synthesis.
-        Override this in subclasses for specific TTS implementations.
-        """
-        self.answer_helper.speak(text)
-
-    def stop_speaking(self) -> None:
-        """Stop current speech"""
-        self._is_speaking = False
-        print(f"{self.name} stopped speaking")
-
-    def get_voice_config(self) -> Dict[str, Any]:
-        """Get the current voice configuration"""
-        return self.voice_config.to_dict()
-
-    def set_voice_config(self, config: VoiceConfig) -> None:
-        """Set the voice configuration"""
-        self.voice_config = config
-
-    def get_status(self) -> Dict[str, Any]:
-        """Get the current status including voice information"""
-        status = super().get_status()
-        status.update({
-            'voice_config': self.get_voice_config(),
-            'speaking': self.is_speaking,
-            'speech_queue_size': len(self._speech_queue)
-        })
-        return status
-    @property
-    def state(self) -> TalkingRoboState:
-        if self._state == TalkingRoboState.SPEAKING and self.answer_helper.tts.state == TTSState.SPEAKING:
-            return TalkingRoboState.SPEAKING
-        return self._state
-    @state.setter
-    def state(self, value: TalkingRoboState) -> None:
-        print(f"Talking Robo State {self.state}")
-        self._state = value
-        
 
 def test_talking_robot():
     answer_helper = AnswerHelper()
     question_helper = QuestionHelper()
     voice_config = VoiceConfig()
     robot = SPEAKING_ROBOT(
-        voice_config,
-        answer_helper,
-        question_helper,
+        voice_config=voice_config,
+        answer_helper=answer_helper,
+        question_helper=question_helper,
         name="Test Robot")
-    robot.speak("Hello, I am your speaking robot.")
-    print(robot.get_status())
-
+    # robot.listen()
+    """Simulate a question"""
+    robot.question = "Hello, how are you?"
+    print(f"Heard: {robot.question}")
+    robot.question = f"Heard you say: {robot.question}"
+    robot.speak()
+    if robot.get_speaking_thread:
+        robot.get_speaking_thread.join()  # Wait for speaking to finish
+    
+    print(f"{robot.name} is {robot.state.value}")
+    
+    
 
 if __name__ == "__main__":
     test_talking_robot()

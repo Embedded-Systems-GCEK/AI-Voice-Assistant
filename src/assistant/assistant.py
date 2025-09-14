@@ -7,20 +7,40 @@ response generation, and conversation management.
 """
 
 import speech_recognition as sr
-import datetime
 import re
-import threading
-import time
-from typing import Optional
-
+from enum import Enum
 # Import the abstract base class from robo_types
-from robot.assistant_robo import ASSISTANT, VoiceConfig
-from robot.answer_helper.answer_helper import AnswerHelper
-from robot.question_helper.question_helper import QuestionHelper
-from files.files import Files
 
+try:
+    from .robot.assistant_robo import ASSISTANT
+    from .robot.answer_helper.answer_helper import AnswerHelper
+    from .robot.question_helper.question_helper import QuestionHelper
+    from .files.files import Files
+    from .ai_providers.ai_providers import AIProvider 
+    from .ai_providers.ollama import Ollama
+except ImportError:
+    from robot.assistant_robo import ASSISTANT
+    from robot.answer_helper.answer_helper import AnswerHelper
+    from robot.question_helper.question_helper import QuestionHelper
+    from files.files import Files
+    from ai_providers.ai_providers import AIProvider
+    from ai_providers.ollama import Ollama
+    
 
-
+class ConversationStates(Enum):
+    """Enumeration of conversation states"""
+    """ When the robot is first initialized """
+    INITIALIZED = "initialized"
+    """ When the robot is waiting for user input """
+    IDLE = "idle"
+    """ When the robot is actively listening for user input """
+    LISTENING = "listening"
+    """ When the robot is processing user input """
+    PROCESSING = "processing"
+    """ When the robot is responding to user input """
+    RESPONDING = "responding"
+    """ When the robot encounters an error """
+    ERROR = "error"
 
 class ConversationalAssistant(ASSISTANT):
     """
@@ -32,27 +52,35 @@ class ConversationalAssistant(ASSISTANT):
     
     def __init__(
         self,
-        files: Files,
-        answer_helper: AnswerHelper,
-        question_helper: QuestionHelper,
+        ai_provider: AIProvider,
         name: str = "Conversational Assistant"
     ):
         super().__init__(
             name=name,
-            answer_helper=answer_helper,
-            question_helper=question_helper,
             )
-        self.files = files
+        """Files Object for File Operations"""
+        self.file = Files()
         """Only Conversational Assistant Returns Something"""
         self.response = ""
+        
         self.current_prompt_index = 0
-
+        self._state = ConversationStates.INITIALIZED
+        self._ai_provider = ai_provider
+        
+        
+    @property
+    def ai_provider(self) -> AIProvider:
+        return self._ai_provider
+    @ai_provider.setter
+    def ai_provider(self, provider: AIProvider):
+        self._ai_provider = provider
     def greet(self) -> None:
         """Perform a greeting sequence"""
         greeting = f"Hello, I am {self.name}. How can I assist you today?"
+        self.response = greeting
         self.speak(greeting)
 
-    def answer(self, text: str) -> None:
+    def answer(self, text: str = "") -> None:
         """
         Speak the given text and manage conversation history.
         
@@ -62,182 +90,78 @@ class ConversationalAssistant(ASSISTANT):
         Returns:
             bool: True if speech was successful, False otherwise
         """
-        self.response = text
+        """Process Command First"""
+        self.process_command()
+        
+        text = self.response if not text else text
         # Clean unwanted characters
         clean_text = re.sub(r'[*_`~#>\\-]', '', text)
         clean_text = re.sub(r'[\U00010000-\U0010ffff]', '', clean_text)
         self.answer_helper.speak(clean_text)
+    
+    
+    def process_command(self, cmd: str = "") -> None:
+        """First set the state to processing"""
+        super().process_command()
+        self.state = ConversationStates.PROCESSING
+        """Get the question
+        Multiple methods available 
+        question = self.question_helper.question
+        question = self.question_helper.stt.text
+        question = self.question_helper.what_spoken()
+        """
+        self.query = cmd if cmd else self.question_helper.question
+        question = self.question_helper.what_spoken()
+        try:
+            self.response = self.ask_to_ai(question)
+        except Exception as e:
+            print(f"Error in process_command: {e}")
+            self.state = ConversationStates.ERROR
+        """Now Speak The Response"""
         
-    # def print_history(self) -> None:
-    #     """Print the conversation history with timestamps"""
-    #     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-    #     user_prefix = f"{self.user_name}: " if self.user_name else "User: "
-    #     print(f"[{timestamp}] {user_prefix}{self.question}")
-    #     print(f"[{timestamp}] {self.name}: {self.response}\n")
-
-    # def process_command(self, command: str) -> str:
-    #     """
-    #     Process a user command and generate a response.
+    def ask_to_ai(self, question: str) -> str:
+        response = self.ai_provider.ask(question)  
+        return response
         
-    #     Args:
-    #         command: The user's command/input
-            
-    #     Returns:
-    #         str: The assistant's response
-    #     """
-    #     self.question = command
-    #     if not command:
-    #         return ""
-
-    #     # Try to extract name if we don't have one yet
-    #     if not self.user_name:
-    #         if self.extract_name_from_response(command):
-    #             response = f"Nice to meet you, {self.user_name}!"
-    #             self.add_to_history(command, response)
-    #             return response
-
-    #     # Check for predefined Q&A
-    #     if self.files and hasattr(self.files, 'qa_dictionary') and command in self.files.qa_dictionary:
-    #         response = self.files.qa_dictionary[command]
-    #         if self.user_name:
-    #             response = f"{self.user_name}, {response}"
-    #         self.add_to_history(command, response)
-    #         return response
-
-    #     # Handle time/date queries
-    #     if "time" in command and "date" in command:
-    #         response = self.tell_datetime()
-    #         self.add_to_history(command, response)
-    #         return response
-    #     elif "time" in command:
-    #         response = self.tell_time()
-    #         self.add_to_history(command, response)
-    #         return response
-    #     elif "date" in command:
-    #         response = self.tell_date()
-    #         self.add_to_history(command, response)
-    #         return response
-    #     elif "day" in command:
-    #         response = self.tell_day()
-    #         self.add_to_history(command, response)
-    #         return response
-
-    #     # Handle goodbye/exit commands
-    #     if any(word in command for word in ["goodbye", "bye", "exit", "quit", "stop"]):
-    #         response = f"Goodbye, {self.user_name}!" if self.user_name else "Goodbye!"
-    #         self.add_to_history(command, response)
-    #         return response
-
-    #     # Handle name-related queries
-    #     if "what" in command and "name" in command:
-    #         if self.user_name:
-    #             response = f"Your name is {self.user_name}."
-    #         else:
-    #             response = "I don't know your name yet. What should I call you?"
-    #         self.add_to_history(command, response)
-    #         return response
-
-    #     # Use AI to respond
-    #     response = self._generate_ai_response(command)
-        
-    #     # Personalize response if we have user's name
-    #     if self.user_name and not response.startswith(self.user_name):
-    #         response = f"{self.user_name}, {response}"
-        
-    #     self.response = response
-    #     self.add_to_history(command, response)
-    #     return response
-
-    # def _generate_ai_response(self, command: str) -> str:
-    #     """Generate AI response using available services"""
-    #     try:
-    #         # Check if we have internet connection and can use online AI
-    #         if self.status and hasattr(self.status, 'is_connected') and self.status.is_connected:
-    #             # Import here to avoid circular imports
-    #             try:
-    #                 from .ai_providers.cohere_api import ask_cohere
-    #                 return ask_cohere(command)
-    #             except ImportError:
-    #                 print("Cohere API not available")
-            
-    #         # Fallback to local AI if available
-    #         if self.ollama and hasattr(self.ollama, 'ask_ollama'):
-    #             return self.ollama.ask_ollama(command)
-                
-    #     except Exception as e:
-    #         print(f"AI response error: {e}")
-        
-    #     # Final fallback responses
-    #     fallback_responses = {
-    #         'hello': "Hello! How can I help you today?",
-    #         'how are you': "I'm doing well, thank you for asking!",
-    #         'help': "I can help you with questions about time, date, general information, and more!",
-    #         'what can you do': "I can answer questions, tell time and date, have conversations, and help with various tasks.",
-    #     }
-        
-    #     command_lower = command.lower()
-    #     for key, fallback in fallback_responses.items():
-    #         if key in command_lower:
-    #             return fallback
-        
-    #     return "I'm not sure how to respond to that. Could you rephrase your question?"
-
-    # def run(self) -> None:
-    #     """Main conversation loop"""
-    #     self.set_conversation_state(ConversationState.WAITING)
-    #     self.greet()
-        
-    #     while True:
-    #         try:
-    #             query = self.listen_with_timeout()
-    #             if query:
-    #                 response = self.process_command(query)
-    #                 if response:
-    #                     self.speak(response)
-    #             else:
-    #                 # No input received within timeout, ask a prompt
-    #                 self.ask_next_prompt()
-                
-    #             time.sleep(1)  # Brief pause between cycles
-                
-    #         except KeyboardInterrupt:
-    #             self.speak("Goodbye!")
-    #             break
-    #         except Exception as e:
-    #             print(f"Error in main loop: {e}")
-    #             time.sleep(2)
-
-    # def set_timeout(self, seconds: int) -> None:
-    #     """Set the timeout duration in seconds"""
-    #     self.timeout_seconds = seconds
-    #     print(f"Timeout set to {seconds} seconds")
-
-    # def is_connected(self) -> bool:
-    #     """Check if the assistant has internet connectivity"""
-    #     return self.status.is_connected if self.status else False
-
-    # def current_response(self):
-    #     return self.answer_helper.
-
-# For backward compatibility, create an alias
-# Assistant = ConversationalAssistant
+    @property 
+    def state(self):
+        return self._state
+    @state.setter
+    def state(self, new_state: ConversationStates):
+        self._state = new_state
+    @property 
+    def response(self) -> str:
+        return self._response
+    @response.setter
+    def response(self, value: str):
+        self._response = value
+    
+    def is_answering(self) -> bool:
+        return self.answer_helper.is_answering() \
+            or self.state == ConversationStates.PROCESSING
+    
 
 def test():
     files = Files()
     answer_helper = AnswerHelper()
     question_helper = QuestionHelper()
+    ai_provider = Ollama()  # Replace with a concrete implementation
     assistant = ConversationalAssistant(
         files=files,
         answer_helper=answer_helper,
         question_helper=question_helper,
+        ai_provider=ai_provider,
         name="Test Assistant"
     )
-    assistant.greet()
-    while True:
-        assistant.listen()
-        print(assistant.question)
-        print(assistant.question_helper.what_spoken())
-        # assistant.answer()
-        print("-" * 30)
+    # assistant.greet()
+    # while True:
+        # assistant.listen()
+    # assistant.question = 
+    assistant.process_command("What is 2 + 2?")
+    assistant.answer()
+    # assistant.answer()
+    while assistant.is_answering():
+        pass
+    print("-" * 30)
 if __name__ == "__main__":
     test()

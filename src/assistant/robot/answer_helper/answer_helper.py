@@ -29,6 +29,7 @@ class AnswerHelper:
         """
         self._state = AnswerHelperState.IDLE
         self._tts = tts
+        self._tts_thread = self._tts.thread
 
     @property
     def tts(self) -> TTS:
@@ -58,15 +59,17 @@ class AnswerHelper:
                 self.state = AnswerHelperState.PROCESSING
             else:
                 self.state = AnswerHelperState.IDLE
-        
-        
-    def is_speaking(self) -> bool:
-        return self.state == AnswerHelperState.PROCESSING or self.tts.is_speaking()
-    
+    def get_tts_thread(self) -> threading.Thread | None:
+        return self._tts_thread
+    def is_answering(self) -> bool:
+        return self.state == AnswerHelperState.PROCESSING \
+            or self.tts.is_speaking() or\
+                self.get_tts_thread() is not None 
+
 def test_answer_helper():
     answer_helper = AnswerHelper()
     answer_helper.speak("Hello, this is a test of the AnswerHelper class.")
-    while answer_helper.is_speaking():
+    while answer_helper.is_answering():
         print(answer_helper.state)
         time.sleep(1)
         

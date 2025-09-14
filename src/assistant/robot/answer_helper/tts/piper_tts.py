@@ -6,8 +6,10 @@ import winsound
 import threading
 from enum import Enum
 
-from .tts import TTS
-
+try: 
+    from .tts import TTS
+except ImportError:
+    from tts import TTS
 # For Testing
 import time
 class PiperState(Enum):
@@ -37,7 +39,6 @@ class PIPER_TTS(TTS):
     def __init__(self):
         super().__init__()
         self._text = ""
-        self._thread = None
         self.piper_state = PiperState.IDLE
 
     @property
@@ -48,13 +49,17 @@ class PIPER_TTS(TTS):
     def piper_state(self, new_state: PiperState):
         self._piper_state = new_state
 
+    @property
+    def thread(self) -> threading.Thread | None:
+        super().thread
+        return self._thread
 
     def speak(self, text: str) -> None:
         super().speak(text)
         self.piper_state = PiperState.PROCESSING
         self._thread = threading.Thread(target=self._speak_internal)
         self._thread.start()
-
+    
     def _speak_internal(self) -> None:
         try:
             if not os.path.exists(PIPER_PATH) or not os.path.exists(MODEL_PATH):

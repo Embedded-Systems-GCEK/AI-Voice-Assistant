@@ -16,11 +16,16 @@ from abc import ABC, abstractmethod
 import speech_recognition as sr
 from typing import  Dict, Any
 from enum import Enum
-# Custom Imports
 
-from .answer_helper.answer_helper import AnswerHelper
-from .question_helper.question_helper import QuestionHelper
-from .talking_robo import SPEAKING_ROBOT, VoiceConfig , ConversationState
+# Custom Imports
+try:
+    from .answer_helper.answer_helper import AnswerHelper
+    from .question_helper.question_helper import QuestionHelper
+    from .talking_robo import SPEAKING_ROBOT
+except ImportError:
+    from answer_helper.answer_helper import AnswerHelper
+    from question_helper.question_helper import QuestionHelper
+    from talking_robo import SPEAKING_ROBOT
 
 class AssistantStates(Enum):
     """States for the Assistant"""
@@ -42,58 +47,64 @@ class ASSISTANT(ABC, SPEAKING_ROBOT):
     """
 
     def __init__(self, 
-        answer_helper: AnswerHelper,
-        question_helper: QuestionHelper,
-        voice_config: VoiceConfig = VoiceConfig(),
         name: str = "AI Assistant",
         ):
         super().__init__(
             name=name,
-            voice_config=voice_config,
-            answer_helper=answer_helper,
-            question_helper=question_helper,
             )
         self._conversation_history = []
-        self._listening_mode = False
-        self._wake_word = "hey assistant"
-        self._conversation_state = ConversationState.IDLE
+        self._assistant_state = AssistantStates.IDLE
         self._user_name = ""
         self.question = ""
+        self.response = ""
         self._timeout_seconds = 10
         self._state = AssistantStates.IDLE
-        
-
 
     """
     TODO: Implement this after , v0.1.0 Release.
     """
     
-           
+
     def listen(self):
         super().listen()
         self.state = AssistantStates.LISTENING
         """Listen for user input with timeout"""
         self.question_helper.hear()
+        self.state = AssistantStates.IDLE
 
+    @property 
+    def query(self) -> str:
+        return self.question_helper.question
+    @query.setter
+    def query(self, value: str) -> None:
+        self.question_helper.question = value
     @abstractmethod 
-    def answer(self, text: str):...
+    def answer(self):...
     @abstractmethod
-    def process_command(self, command: str) -> str:...
+    def process_command(self):
+        self.state = AssistantStates.PROCESSING
+        return 
     @abstractmethod
     def greet(self) -> None:...
     
     @property 
-    def state(self) -> AssistantStates:
+    def assistant_state(self) -> AssistantStates:
         return self._state
-    
-    @state.setter
-    def state(self, state: AssistantStates) -> None:
-        print(f"Assistant Robo State {self.state}")
-        self._state = state
 
-    
+    @assistant_state.setter
+    def assistant_state(self, state: AssistantStates) -> None:
+        print(f"Assistant Robo State {state.value}")  # Use the parameter directly
+        self._state = state
+        
+    def is_listening(self) -> bool:
+        return self.assistant_state == AssistantStates.LISTENING or \
+               self.question_helper.is_listening()
+
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}(name='{self.name}', listening={self.is_listening}, state={self.conversation_state.value})"
+        return f"{self.__class__.__name__}(" \
+               f"name='{self.name}', " \
+               f"listening={self.is_listening()}, " \
+               f"state={self.assistant_state.value})"
 
     # @property
     # def wake_word(self) -> str:
@@ -109,11 +120,6 @@ class ASSISTANT(ABC, SPEAKING_ROBOT):
     # def conversation_history(self) -> list:
     #     """Get the conversation history"""
     #     return self._conversation_history.copy()
-
-    # @property
-    # def is_listening(self) -> bool:
-    #     """Check if the assistant is currently listening"""
-    #     return self._listening_mode
 
     # @property
     # def conversation_state(self) -> ConversationState:
@@ -262,3 +268,52 @@ class ASSISTANT(ABC, SPEAKING_ROBOT):
     #     })
     #     return status
     
+def test_assistant_robo():
+    from answer_helper.answer_helper import AnswerHelper
+    from question_helper.question_helper import QuestionHelper
+    answer_helper = AnswerHelper()
+    question_helper = QuestionHelper()
+
+    class TestAssistant(ASSISTANT):
+        def __init__(
+            self, 
+            answer_helper, 
+            question_helper, 
+            name = "AI Assistant"
+            
+                ):
+            super().__init__(
+                answer_helper=answer_helper, 
+                question_helper=question_helper, 
+                name=name
+                )
+        
+        def answer(self) -> None:
+            self.state = AssistantStates.RESPONDING
+            self.answer_helper.speak(self.question)
+        
+        def process_command(self):
+            self.state = AssistantStates.PROCESSING
+            # Simulate processing
+            if self.question_helper.what_spoken():
+                self.question = self.question_helper.what_spoken()
+            else:
+                self.question = "No input detected."
+            return
+        
+        def greet(self) -> None:
+            super().state = AssistantStates.RESPONDING
+            self.answer_helper.speak("Hello, I am your test assistant.")
+            super().state = AssistantStates.IDLE
+
+    assistant = TestAssistant(
+        name="Test Assistant",
+        answer_helper=answer_helper,
+        question_helper=question_helper
+    )
+
+    print(assistant)
+    print(assistant.get_status())
+    
+if __name__ == "__main__":
+    test_assistant_robo()
