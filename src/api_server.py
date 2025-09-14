@@ -12,8 +12,9 @@ from datetime import datetime
 import uuid
 from flasgger import Swagger
 from enum import Enum
+import logging
 
-
+logging.basicConfig(level=logging.INFO)
 # Custom Imports
 from assistant.assistant import ConversationalAssistant
 # Add current directory to path
@@ -370,10 +371,11 @@ def reset_conversation():
             }
         })
         
+        logging.error("Error during conversation reset", exc_info=True)
     except Exception as e:
         return jsonify({
             "status": "error",
-            "message": f"Reset failed: {str(e)}"
+            "message": "Conversation reset failed due to an internal error."
         }), 500
 
 @app.route('/health', methods=['GET'])
