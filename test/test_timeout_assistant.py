@@ -6,7 +6,6 @@ This demonstrates how the 10-second timeout works and prompts for user informati
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.assistant.assistant import ConversationalAssistant
 from src.assistant.status.status import Status
