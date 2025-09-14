@@ -4,13 +4,16 @@ from abc import ABC, abstractmethod
     
     
 class TTSState(Enum):
-    """When Doing Nothin"""
+    """Represents the state of the TTS engine.
+
+    IDLE: When doing nothing.
+    PROCESSING: When processing text.
+    SPEAKING: When speaking (currently not used).
+    ERROR: When something is wrong (not implemented).
+    """
     IDLE = "idle"
     PROCESSING = "processing"
-    # """When Speaking"""
-    # SPEAKING = "speaking"
-    """When Something is Wrong"""
-    
+    # SPEAKING = "speaking"  # Uncomment if/when speaking state is needed
     
 
 class TTS(ABC):
