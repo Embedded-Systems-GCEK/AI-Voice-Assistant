@@ -1,4 +1,4 @@
-from assistant.ai_providers.ollama import Ollama
+from ...assistant.ai_providers.ollama import Ollama
 
 
 
