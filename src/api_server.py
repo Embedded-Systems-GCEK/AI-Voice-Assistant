@@ -216,9 +216,10 @@ def ask_assistant():
             
     except Exception as e:
         assistant_status = "error"
+        logging.error("Unhandled exception in ask_assistant: %s", str(e), exc_info=True)
         return jsonify({
             "status": "error",
-            "message": f"Request processing error: {str(e)}"
+            "message": "An internal server error occurred."
         }), 500
 
 @app.route('/api/conversation', methods=['GET'])
