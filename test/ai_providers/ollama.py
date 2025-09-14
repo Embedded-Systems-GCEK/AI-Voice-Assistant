@@ -6,7 +6,7 @@ if __name__ == "__main__":
     questions = [
         "Who are you?",
         "What is linux?",
-        "Is AI is really can think?"
+        "Can AI really think?"
     ]
     
     ollama  = Ollama()
