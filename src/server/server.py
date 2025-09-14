@@ -1,0 +1,134 @@
+from config.config import app, db
+from utils.helpers import init_cors, check_health
+from controllers.user_controller import UserController
+from controllers.question_controller import QuestionController
+from controllers.api_controller import APIController
+from handlers.request_handler import CORSHandler
+from database.db_helper import DatabaseHelper
+from models.models import User, QuestionResponse
+import threading
+
+
+# Initialize CORS
+init_cors(app)
+
+# Create database tables
+with app.app_context():
+    DatabaseHelper.create_all()
+
+# Routes
+@app.route('/health')
+def health_check():
+    return check_health()
+
+@app.route("/ping")
+def ping():
+    return "<h1>Pong!</h1>"
+
+
+@app.route('/')
+def index():
+    return """
+    <h1>AI Assistant Unified Server</h1>
+    <p>This server provides both API and UI functionality.</p>
+    <h3>Available Endpoints:</h3>
+    <ul>
+        <li><strong>Health:</strong> <a href="/health">/health</a></li>
+        <li><strong>Statistics:</strong> <a href="/stats">/stats</a></li>
+        <li><strong>API Example Questions:</strong> <a href="/api/example-questions">/api/example-questions</a></li>
+        <li><strong>API Status:</strong> <a href="/api/assistant/status">/api/assistant/status</a></li>
+    </ul>
+    <h3>API Usage:</h3>
+    <ul>
+        <li><strong>POST /api/ask</strong> - Ask a question</li>
+        <li><strong>GET /api/conversation/&lt;user_id&gt;</strong> - Get conversation history</li>
+        <li><strong>POST /api/assistant/reset</strong> - Reset assistant</li>
+    </ul>
+    """
+
+# Handle preflight OPTIONS requests
+@app.before_request
+def handle_preflight():
+    return CORSHandler.handle_preflight()
+
+# User routes
+@app.route('/users', methods=['POST'])
+def create_user():
+    return UserController.create_user()
+
+@app.route('/users', methods=['GET'])
+def get_users():
+    return UserController.get_users()
+
+@app.route('/users/<user_id>', methods=['GET'])
+def get_user(user_id):
+    return UserController.get_user(user_id)
+
+@app.route('/users/<user_id>', methods=['PUT'])
+def update_user(user_id):
+    return UserController.update_user(user_id)
+
+@app.route('/users/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    return UserController.delete_user(user_id)
+
+@app.route('/users/<user_id>/questions', methods=['GET'])
+def get_user_questions(user_id):
+    return UserController.get_user_questions(user_id)
+
+# Question routes
+@app.route('/questions', methods=['POST'])
+def create_question_response():
+    return QuestionController.create_question_response()
+
+@app.route('/questions', methods=['GET'])
+def get_question_responses():
+    return QuestionController.get_question_responses()
+
+@app.route('/questions/<response_id>', methods=['GET'])
+def get_question_response(response_id):
+    return QuestionController.get_question_response(response_id)
+
+@app.route('/questions/<response_id>', methods=['DELETE'])
+def delete_question_response(response_id):
+    return QuestionController.delete_question_response(response_id)
+
+# API routes
+@app.route('/api/example-questions', methods=['GET'])
+def get_example_questions():
+    return APIController.get_example_questions()
+
+@app.route('/api/ask', methods=['POST'])
+def ask_assistant():
+    return APIController.ask_assistant()
+
+@app.route('/api/conversation/<user_id>', methods=['GET'])
+def get_user_conversation(user_id):
+    return APIController.get_user_conversation(user_id)
+
+@app.route('/api/assistant/status', methods=['GET'])
+def get_assistant_status():
+    return APIController.get_assistant_status()
+
+@app.route('/api/assistant/reset', methods=['POST'])
+def reset_assistant():
+    return APIController.reset_assistant()
+
+# Stats route
+@app.route('/stats', methods=['GET'])
+def get_stats():
+    try:
+        stats = DatabaseHelper.get_stats()
+        from handlers.request_handler import ResponseHandler
+        return ResponseHandler.success('Statistics retrieved successfully', stats)
+    except Exception as e:
+        from handlers.request_handler import ResponseHandler
+        return ResponseHandler.server_error(str(e))
+
+if __name__ == '__main__':
+    print("Starting AI Assistant Unified Server...")
+    print("This server provides both API and UI functionality")
+    print("Available on: http://localhost:5000")
+    print("API endpoints: http://localhost:5000/api/")
+    print("Health check: http://localhost:5000/health")
+    app.run(host='0.0.0.0', port=5000, debug=True)
