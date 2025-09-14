@@ -7,7 +7,7 @@ from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
 
 # Custom Import
-from ai_providers import AiProvider, AiProviderList, AiProviderStatus
+from .ai_providers import AiProvider, AiProviderList, AiProviderStatus
 
 from dotenv import load_dotenv
 load_dotenv()
