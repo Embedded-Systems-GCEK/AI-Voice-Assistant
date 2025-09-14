@@ -14,7 +14,7 @@ try:
     from assistant.robot.answer_helper.tts.tts import PIPER_TTS
     from assistant.ai_providers.ollama import Ollama
     from assistant.files.files import Files
-    from assistant.robot.answer_helper import AnswerHelper
+    from assistant.robot.answer_helper.answer_helper import AnswerHelper
     ASSISTANT_AVAILABLE = True
 except ImportError:
     ASSISTANT_AVAILABLE = False
