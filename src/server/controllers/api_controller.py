@@ -76,7 +76,7 @@ class APIController:
                     ollama=ollama, 
                     files=files,
                     voice_config=None,
-                    answer_helper=Ans,
+                    answer_helper=AnswerHelper(),
                 )
                 print("Assistant initialized successfully")
             except Exception as e:
