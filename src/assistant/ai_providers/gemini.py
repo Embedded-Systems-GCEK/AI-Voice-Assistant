@@ -4,7 +4,7 @@ import google.generativeai as genai
 @ github.com/aruncs31s
 Must Load Keys from the .env file or environment variables.
 """
-GEMINI_API_KEY = "AIzaSyCBfhLBkCf0wbkgTF8IKu3RJ8LD7G83Tws" 
+GEMINI_API_KEY = "" 
 
 # Custom Imports
 try:

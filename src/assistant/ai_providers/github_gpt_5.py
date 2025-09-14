@@ -15,7 +15,7 @@ except ImportError:
 from dotenv import load_dotenv
 load_dotenv()
 
-token = os.getenv('GITHUB_GPT_5_TOKEN', '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')
+token = os.getenv('GITHUB_GPT_5_TOKEN', '')
 
 class GPT_5(AIProvider):
     def __init__(self, api_token: str = None):
