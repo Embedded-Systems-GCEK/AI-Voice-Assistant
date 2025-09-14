@@ -1,0 +1,261 @@
+import os
+import json
+import speech_recognition as sr
+import pyttsx3
+import google.generativeai as genai
+from gtts import gTTS
+import pygame
+from langdetect import detect
+
+# =======================
+#  SETUP
+# =======================
+GEMINI_API_KEY = ""  # put your API key here (keep it secret!)
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-2.5-flash")
+
+# English TTS engine
+engine = pyttsx3.init()
+engine.setProperty("rate", 180)
+engine.setProperty("volume", 1.0)
+
+recognizer = sr.Recognizer()
+mic = sr.Microphone()
+
+# =======================
+#  MEMORY
+# =======================
+MEMORY_FILE = "karen_memory.json"
+
+# default structure
+memory = {
+    "chat_history": [],
+    "input_lang": "en-US",   # for SpeechRecognition: en-US / ml-IN / hi-IN / "auto"
+    "reply_lang": None       # for TTS: en / ml / hi / None(auto)
+}
+
+# load if exists
+if os.path.exists(MEMORY_FILE):
+    try:
+        with open(MEMORY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, dict):
+                memory.update(data)
+    except Exception as e:
+        print("⚠️ Could not load memory:", e)
+
+chat_history = memory.get("chat_history", [])
+input_lang = memory.get("input_lang", "en-US")
+reply_lang = memory.get("reply_lang", None)
+
+def save_memory():
+    memory["chat_history"] = chat_history
+    memory["input_lang"] = input_lang
+    memory["reply_lang"] = reply_lang
+    with open(MEMORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(memory, f, indent=2, ensure_ascii=False)
+
+# =======================
+#  HELPERS
+# =======================
+def normalize_tts_lang(code_or_none, fallback_text=""):
+    """
+    Map our reply_lang to gTTS/pyttsx3 codes.
+    - For English, we use pyttsx3 (no code needed → return 'en' for consistency).
+    - For non-English, gTTS expects 2-letter codes: 'ml', 'hi'.
+    - If None, auto-detect from text.
+    """
+    if not code_or_none:
+        try:
+            det = detect(fallback_text)
+            return det if det in ("en", "ml", "hi") else "en"
+        except:
+            return "en"
+    # explicit
+    if code_or_none.startswith("en"):
+        return "en"
+    if code_or_none.startswith("ml"):
+        return "ml"
+    if code_or_none.startswith("hi"):
+        return "hi"
+    # default
+    return "en"
+
+def sr_code_for(lang_short):
+    """Return SpeechRecognition BCP-47 code from short: en/ml/hi."""
+    return {"en": "en-US", "ml": "ml-IN", "hi": "hi-IN"}.get(lang_short, "en-US")
+
+# =======================
+#  SPEAK
+# =======================
+def speak(text):
+    global reply_lang
+    tts_code = normalize_tts_lang(reply_lang, text)
+
+    if tts_code == "en":
+        engine.say(text)
+        engine.runAndWait()
+    else:
+        # Use gTTS for Malayalam/Hindi
+        tts = gTTS(text=text, lang=tts_code)
+        tmp = "temp_karen_tts.mp3"
+        tts.save(tmp)
+        pygame.mixer.init()
+        pygame.mixer.music.load(tmp)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+        pygame.mixer.quit()
+        os.remove(tmp)
+
+# =======================
+#  ASK GEMINI
+# =======================
+def ask_gemini(question):
+    global chat_history, reply_lang
+
+    # Base system prompt
+    instruction = "You are Karen, a helpful AI assistant. Always reply briefly, clearly, and to the point (max 2–3 sentences)."
+
+    # Force reply language
+    if reply_lang == "ml":
+        instruction += " Always reply in Malayalam."
+    elif reply_lang == "hi":
+        instruction += " Always reply in Hindi."
+    elif reply_lang == "en":
+        instruction += " Always reply in English."
+
+    system_prompt = {"role": "user", "parts": [instruction]}
+
+    # Combine with history
+    full_history = [system_prompt] + chat_history + [{"role": "user", "parts": [question]}]
+
+    try:
+        response = model.generate_content(full_history)
+        reply = getattr(response, "text", "Sorry, I couldn’t generate a response.")
+        chat_history.append({"role": "user", "parts": [question]})
+        chat_history.append({"role": "model", "parts": [reply]})
+        save_memory()
+        return reply.strip()
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# =======================
+#  LISTEN
+# =======================
+
+def listen():
+    with mic as source:
+        print("🎤 Listening...")
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+
+    try:
+        # Use global listen_lang set by set_listen()
+        lang = listen_lang if listen_lang else "en-US"
+        query = recognizer.recognize_google(audio, language=lang)
+        print(f"🗣 ({lang}) You said: {query}")
+        return query
+    except sr.UnknownValueError:
+        return None
+    except sr.RequestError:
+        return None
+
+COMMANDS = {
+    "english mode": ["english mode", "ഇംഗ്ലീഷ് മോഡ്", "इंग्लिश मोड"],
+    "malayalam mode": ["malayalam mode", "മലയാളം മോഡ്"],
+    "hindi mode": ["hindi mode", "हिंदी मोड"],
+}
+
+# =======================
+#  COMMAND HANDLERS
+# =======================
+
+# =======================
+#  GLOBAL LANG SETTINGS
+# =======================
+listen_lang = "en-US"   # for SpeechRecognition
+reply_lang  = "en"      # for TTS/Gemini
+
+def set_listen(lang_short_or_auto):
+    global listen_lang
+    if lang_short_or_auto == "auto":
+        listen_lang = "en-US"   # fallback default
+    else:
+        listen_lang = sr_code_for(lang_short_or_auto)  # "en" → "en-US", "ml" → "ml-IN", "hi" → "hi-IN"
+    save_memory()
+
+def set_reply(lang_short_or_auto):
+    global reply_lang
+    reply_lang = None if lang_short_or_auto == "auto" else lang_short_or_auto
+    save_memory()
+
+def handle_commands(q):
+    ql = q.lower().strip()
+
+    # Full switch (listen + reply)
+    if ql in ["malayalam", "മലയാളം"]:
+        set_listen("ml")
+        set_reply("ml")
+        speak("ശരി, ഇനി ഞാൻ മലയാളത്തിൽ കേൾക്കും, മറുപടി നൽകും.")
+        return True
+
+    if ql in ["hindi", "हिंदी"]:
+        set_listen("hi")
+        set_reply("hi")
+        speak("ठीक है, अब मैं हिन्दी में सुनूँगा और जवाब दूँगा।")
+        return True
+
+    if ql in ["english", "eng", "en", "ഇംഗ്ലീഷ്"]:
+        set_listen("en")
+        set_reply("en")
+        speak("Okay, now I will listen and reply in English.")
+        return True
+
+    # Listen-only
+    if "listen in malayalam" in ql:
+        set_listen("ml"); speak("ശരി, ഞാൻ മലയാളം കേൾക്കും."); return True
+    if "listen in hindi" in ql:
+        set_listen("hi"); speak("ठीक है, मैं हिन्दी सुनूँगा।"); return True
+    if "listen in english" in ql:
+        set_listen("en"); speak("Okay, I will listen in English."); return True
+    if "listen auto" in ql:
+        set_listen("auto"); speak("Okay, I will auto-detect your input."); return True
+
+    # Reply-only
+    if "reply in malayalam" in ql:
+        set_reply("ml"); speak("ശരി, ഞാൻ മലയാളത്തിൽ മറുപടി നൽകും."); return True
+    if "reply in hindi" in ql:
+        set_reply("hi"); speak("ठीक है, मैं हिन्दी में जवाब दूँगा।"); return True
+    if "reply in english" in ql:
+        set_reply("en"); speak("Okay, I will reply in English."); return True
+    if "reply auto" in ql:
+        set_reply("auto"); speak("Okay, I will auto-detect reply language."); return True
+
+    return False
+
+
+
+# =======================
+#  MAIN LOOP
+# =======================
+if __name__ == "__main__":
+    speak("Hello, I am Karen, your AI Assistant. Ask me anything!")
+
+    while True:
+        query = listen()
+        if not query:
+            continue
+
+        if any(w in query.lower() for w in ["exit", "quit", "goodbye", "bye"]):
+            speak("Goodbye!")
+            break
+
+        # Commands
+        if handle_commands(query):
+            continue
+
+        # Normal conversation
+        answer = ask_gemini(query)
+        print(f"🤖 Karen: {answer}")
+        speak(answer)
