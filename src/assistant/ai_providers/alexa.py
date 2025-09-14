@@ -1,4 +1,4 @@
-from .ollama import AiProvider
+from .ai_providers import AiProvider
 class Alexa(AiProvider):
     def __init__(self):
         pass
