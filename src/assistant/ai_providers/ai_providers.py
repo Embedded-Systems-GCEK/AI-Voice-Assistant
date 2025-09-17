@@ -8,7 +8,7 @@ class AiProviderStatus(Enum):
     IDLE = "Idle"
     BUSY = "Busy"
     ERROR = "Error"
-    """If its online , create a seperate thread ans ask a demo question to check its status"""
+    """If its offline , create a seperate thread ans ask a demo question to check its status"""
     OFFLINE = "Offline"
     TIMEOUT = "Timeout"
 class AiProviderList(Enum):
@@ -58,7 +58,7 @@ class AIProvider(ABC):
         self._question_asked_time: float = 0.0
         self._answer_time: float = 0.0
         self._response_time: float = 0.0
-        self._last_answer_time: float = 0.0  # For caching response time calculation
+        self._last_answer_time: float = 0.0  
         """Request Params"""
         self._temperature: float = 0.3
         self._max_tokens: int = 150
@@ -80,7 +80,6 @@ class AIProvider(ABC):
             question=question,
             answer=answer
             )
-        # print(f"Added Q&A: {q_and_a.to_dict()}")
         self._QandAs.append(q_and_a)
 
     @property
@@ -93,6 +92,7 @@ class AIProvider(ABC):
     @timeout.setter
     def timeout(self, value: int) -> None:
         self._timeout = value
+        
     def ask_with_timeout(self, prompt: str) -> str:
         """Ask with timeout - kills thread if it takes too long"""
         self._stop_event.clear()  
@@ -104,7 +104,7 @@ class AIProvider(ABC):
         
         self._thread.join(timeout=self._timeout)
         if self._thread.is_alive():
-            print(f"⚠️  {self.name} request timed out after {self._timeout} seconds")
+            print(f"⚠️ {self.name} request timed out after {self._timeout} seconds")
             self._stop_event.set() 
             self._thread.join(timeout=0.5)
             if self._thread.is_alive():
@@ -120,9 +120,7 @@ class AIProvider(ABC):
         try:
             if self._stop_event.is_set():
                 return
-                
             result = self.ask(prompt)
-            
             if not self._stop_event.is_set():
                 self._last_result = result
                 
@@ -150,16 +148,9 @@ class AIProvider(ABC):
     
     def _generic_ask(self, prompt: str) -> str:
         """Generic ask implementation that can be used by subclasses"""
-        # Debug: Check what we're receiving
-        print(f"DEBUG: Received prompt: {repr(prompt)}")
-        print(f"DEBUG: Prompt type: {type(prompt)}")
-        print(f"DEBUG: Prompt stripped: {repr(prompt.strip()) if prompt else 'None'}")
-
         if not prompt or not prompt.strip():
-            print("DEBUG: Prompt validation failed")
+            print(f"{ self.name }: Prompt validation failed")
             return "Please provide a valid prompt."
-        
-
         print("DEBUG: Prompt validation passed, proceeding...")
         
         try:

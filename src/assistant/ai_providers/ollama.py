@@ -33,7 +33,7 @@ class Ollama(AIProvider):
                 "http://localhost:11434/api/chat/",
                 json={
                     "model": self.model,
-                    "messages": ollama_messages,  # Send full conversation history
+                    "messages": ollama_messages,
                     "stream": False,
                     "options": {
                         "temperature": self.temperature
