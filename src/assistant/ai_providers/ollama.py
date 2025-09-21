@@ -54,10 +54,6 @@ class Ollama(AIProvider):
             self.status = AiProviderStatus.ERROR
             return f"Error communicating with Ollama API: {e}"
 
-    def ask_ollama_api(self, message: list[dict[str, str]] | str) -> str:
-        """Legacy method - now delegates to _call_api"""
-        return self._call_api(message)
-    
     def ask(self, prompt: str) -> str:
         """Use the generic ask implementation from base class"""
         # Call parent ask method to handle message logging and stop checks
@@ -92,10 +88,10 @@ if __name__ == "__main__":
     for key, value in stats.items():
         print(f"  {key.replace('_', ' ').title()}: {value}")
 
-    print("\n🧹 Clearing conversation history...")
-    print()
-    for obj in ollama.QandAs:
-        print(obj.to_dict())
+    # print("\n🧹 Clearing conversation history...")
+    # print()
+    # for obj in ollama.QandAs:
+    #     print(obj.to_dict())
     
-    ollama.clear_messages()
-    ollama.show_conversation_history()
+    # ollama.clear_messages()
+    # ollama.show_conversation_history()

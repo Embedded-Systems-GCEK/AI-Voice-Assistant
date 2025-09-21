@@ -79,10 +79,6 @@ class Gemini(AIProvider):
             self.status = AiProviderStatus.ERROR
             return f"Error communicating with Gemini API: {e}"
 
-    def ask_gemini_api(self, message: list[dict[str, str]] | str) -> str:
-        """Legacy method - now delegates to _call_api"""
-        return self._call_api(message)
-
     def ask(self, prompt: str) -> str:
         """Use the generic ask implementation from base class"""
         super().ask(prompt)
@@ -120,15 +116,15 @@ if __name__ == "__main__":
         for key, value in stats.items():
             print(f"  {key.replace('_', ' ').title()}: {value}")
 
-        print("\n🧹 Clearing conversation history...")
-        print()
-        for obj in gemini.QandAs:
-            print(obj.to_dict())
+    #     print("\n🧹 Clearing conversation history...")
+    #     print()
+    #     for obj in gemini.QandAs:
+    #         print(obj.to_dict())
         
-        gemini.clear_messages()
-        gemini.show_conversation_history()
+    #     gemini.clear_messages()
+    #     gemini.show_conversation_history()
 
-    except ValueError as e:
-        print(f"❌ Configuration Error: {e}")
-    except Exception as e:
-        print(f"❌ Error testing Gemini: {e}")
+    # except ValueError as e:
+    #     print(f"❌ Configuration Error: {e}")
+    # except Exception as e:
+    #     print(f"❌ Error testing Gemini: {e}")

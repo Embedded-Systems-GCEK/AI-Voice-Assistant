@@ -17,6 +17,7 @@ class AiProviderList(Enum):
     GITHUB_GPT_5 = "GitHub GPT-5"
     COHERE = "Cohere"
     GEMINI = "Gemini"
+    LLAMA = "GitHub Llama"
    
 class QuestionAndAnswer:
     def __init__(
@@ -44,8 +45,9 @@ class QuestionAndAnswer:
 
     @classmethod
     def from_dict(cls, data: dict):
-        timestamp = datetime.fromisoformat(data["timestamp"]) if "timestamp" in data else None
-        return cls(question=data["question"], answer=data["answer"], timestamp=timestamp)
+        # Note: timestamp is always set to current time in __init__
+        # The stored timestamp in data is for reference only
+        return cls(question=data["question"], answer=data["answer"])
      
 class AIProvider(ABC):
     def __init__(self):

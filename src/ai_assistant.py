@@ -9,6 +9,7 @@ from assistant.ai_providers.ollama import Ollama
 from assistant.ai_providers.github_gpt_5 import GPT_5
 from assistant.ai_providers.cohere_api import CohereAPI
 from assistant.ai_providers.gemini import Gemini
+from assistant.ai_providers.llama import Llama
 
 # Files 
 from assistant.files.files import Files
@@ -25,7 +26,7 @@ class AIProviderStatus:
 
 
 class AIAssistant(ConversationalAssistant):
-    def __init__(v v
+    def __init__(
         self,
         ai_provider: AIProvider = Ollama(),
         name: str = "AI Assistant"
