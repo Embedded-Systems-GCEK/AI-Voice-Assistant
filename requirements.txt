@@ -7,3 +7,11 @@ cohere
 
 # Additional utilities
 requests
+
+# Web Framework
+Flask
+Flask-SQLAlchemy
+Flask-CORS
+
+# API Documentation
+flasgger

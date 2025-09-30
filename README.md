@@ -18,11 +18,32 @@ This is a fully functional , generic AI powered Voice Assistant
 - **Database Integration**: SQLite database with SQLAlchemy for data persistence
 - **User Management**: User tracking and conversation history
 - **CORS Support**: Cross-origin requests enabled for web/mobile clients
+- **API Documentation**: Interactive Swagger UI documentation available at `/apidocs`
 
 ### Mobile Integration
 - **Flutter App Support**: Designed for seamless integration with Flutter mobile applications
 - **Real-time Communication**: API endpoints for live assistant interaction
 - **Example Questions**: Pre-configured question sets for mobile app demonstration
+
+
+## API Documentation
+
+The API includes comprehensive Swagger/OpenAPI documentation that can be accessed when the server is running:
+
+1. Start the server: `python src/app.py`
+2. Open your browser and navigate to: `http://localhost:5000/apidocs`
+3. The interactive documentation allows you to:
+   - View all available endpoints
+   - See request/response schemas
+   - Test API calls directly from the browser
+   - Download the OpenAPI specification
+
+### Key Endpoints Documented:
+- **Health Check**: `/health` - Server health status
+- **User Management**: `/users` - CRUD operations for users
+- **AI Assistant**: `/api/ask` - Ask questions to the AI assistant
+- **Conversations**: `/api/conversation/<user_id>` - Get user conversation history
+- **Example Questions**: `/api/example-questions` - Pre-configured question sets
 
 
 ## 🤝 Contributing
