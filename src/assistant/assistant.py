@@ -2,30 +2,32 @@
 Assistant Module
 
 This module contains the concrete implementation of the ConversationalAssistant class.
-It provides a complete conversational AI assistant with speech recognition, 
+It provides a complete conversational AI assistant with speech recognition,
 response generation, and conversation management.
 """
 
-import speech_recognition as sr
 import re
-from enum import Enum
-# Import the abstract base class from robo_types
+from enum import Enum 
 
-try:
-    from .robot.assistant_robo import ASSISTANT
-    from .robot.answer_helper.answer_helper import AnswerHelper
-    from .robot.question_helper.question_helper import QuestionHelper
-    from .files.files import Files
-    from .ai_providers.ai_providers import AIProvider 
-    from .ai_providers.ollama import Ollama
-except ImportError:
-    from robot.assistant_robo import ASSISTANT
-    from robot.answer_helper.answer_helper import AnswerHelper
-    from robot.question_helper.question_helper import QuestionHelper
-    from files.files import Files
-    from ai_providers.ai_providers import AIProvider
-    from ai_providers.ollama import Ollama
-    
+from .ai_provider import AIProvider, Ollama
+from .robot.assistant_robo import ASSISTANT
+from .files.files import Files
+
+
+class AsistantStatusErr(Enum):
+    FILE = "path not found"
+    NET = "network error"
+    AUTH = "authentication error"
+    ERR = "general error"
+    NONE = "no error"
+class AssistantStatus(Enum):
+    IDLE = "idle"
+    LISTENING = "listening"
+    PROCESSING = "processing"
+    SPEAKING = "speaking"
+    READY = "ready"
+    ERROR = AsistantStatusErr
+
 
 class ConversationStates(Enum):
     """Enumeration of conversation states"""
@@ -42,6 +44,7 @@ class ConversationStates(Enum):
     """ When the robot encounters an error """
     ERROR = "error"
 
+
 class ConversationalAssistant(ASSISTANT):
     """
     Concrete implementation of an AI assistant with full conversation capabilities.
@@ -49,31 +52,31 @@ class ConversationalAssistant(ASSISTANT):
     a complete conversational AI assistant with speech recognition, response generation,
     and conversation management.
     """
-    
-    def __init__(
-        self,
-        ai_provider: AIProvider,
-        name: str = "Conversational Assistant"
-    ):
+
+    def __init__(self, 
+                ai_provider: AIProvider,
+                name: str = "Conversational Assistant",
+                ):
         super().__init__(
             name=name,
-            )
+        )
         """Files Object for File Operations"""
         self.file = Files()
         """Only Conversational Assistant Returns Something"""
         self.response = ""
-        
+
         self.current_prompt_index = 0
         self._state = ConversationStates.INITIALIZED
         self._ai_provider = ai_provider
-        
-        
+
     @property
     def ai_provider(self) -> AIProvider:
         return self._ai_provider
+
     @ai_provider.setter
     def ai_provider(self, provider: AIProvider):
         self._ai_provider = provider
+
     def greet(self) -> None:
         """Perform a greeting sequence"""
         greeting = f"Hello, I am {self.name}. How can I assist you today?"
@@ -83,23 +86,22 @@ class ConversationalAssistant(ASSISTANT):
     def answer(self, text: str = "") -> None:
         """
         Speak the given text and manage conversation history.
-        
+
         Args:
             text: The text to speak
-            
+
         Returns:
             bool: True if speech was successful, False otherwise
         """
         """Process Command First"""
         self.process_command()
-        
+
         text = self.response if not text else text
         # Clean unwanted characters
-        clean_text = re.sub(r'[*_`~#>\\-]', '', text)
-        clean_text = re.sub(r'[\U00010000-\U0010ffff]', '', clean_text)
+        clean_text = re.sub(r"[*_`~#>\\-]", "", text)
+        clean_text = re.sub(r"[\U00010000-\U0010ffff]", "", clean_text)
         self.answer_helper.speak(clean_text)
-    
-    
+
     def process_command(self, cmd: str = "") -> None:
         """First set the state to processing"""
         super().process_command()
@@ -118,50 +120,42 @@ class ConversationalAssistant(ASSISTANT):
             print(f"Error in process_command: {e}")
             self.state = ConversationStates.ERROR
         """Now Speak The Response"""
-        
+
     def ask_to_ai(self, question: str) -> str:
-        response = self.ai_provider.ask(question)  
+        response = self.ai_provider.ask(question)
         return response
-        
-    @property 
+
+    @property
     def state(self):
         return self._state
+
     @state.setter
     def state(self, new_state: ConversationStates):
         self._state = new_state
-    @property 
+
+    @property
     def response(self) -> str:
         return self._response
+
     @response.setter
     def response(self, value: str):
         self._response = value
-    
+
     def is_answering(self) -> bool:
-        return self.answer_helper.is_answering() \
-            or self.state == ConversationStates.PROCESSING
-    
+        _is_answering = self.answer_helper.is_answering() or self.state == ConversationStates.PROCESSING
+        return _is_answering
+            
 
 def test():
-    files = Files()
-    answer_helper = AnswerHelper()
-    question_helper = QuestionHelper()
     ai_provider = Ollama()  # Replace with a concrete implementation
     assistant = ConversationalAssistant(
-        files=files,
-        answer_helper=answer_helper,
-        question_helper=question_helper,
         ai_provider=ai_provider,
-        name="Test Assistant"
+        name="Test Assistant",
     )
-    # assistant.greet()
-    # while True:
-        # assistant.listen()
-    # assistant.question = 
+
     assistant.process_command("What is 2 + 2?")
     assistant.answer()
     # assistant.answer()
     while assistant.is_answering():
         pass
     print("-" * 30)
-if __name__ == "__main__":
-    test()

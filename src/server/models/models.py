@@ -1,4 +1,4 @@
-from config.config import db
+from ..config.config import db
 from datetime import datetime
 import uuid
 from typing import Optional

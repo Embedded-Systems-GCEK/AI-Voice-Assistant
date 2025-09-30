@@ -1,6 +1,6 @@
-from models.models import User, QuestionResponse
-from database.db_helper import DatabaseHelper
-from handlers.request_handler import RequestHandler, ResponseHandler
+from ..models.models import User, QuestionResponse
+from ..database.db_helper import DatabaseHelper
+from ..handlers.request_handler import RequestHandler, ResponseHandler
 from datetime import datetime
 import sys
 import os
@@ -9,12 +9,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 try:
-    from assistant.assistant import ConversationalAssistant
-    from assistant.status.status import Status
-    from assistant.robot.answer_helper.tts.tts import PIPER_TTS
-    from assistant.ai_providers.ollama import Ollama
-    from assistant.files.files import Files
-    from assistant.robot.answer_helper.answer_helper import AnswerHelper
+    from ai_assistant import get_ai_assistant, initialize_ai_assistant, AISingleton
     ASSISTANT_AVAILABLE = True
 except ImportError:
     ASSISTANT_AVAILABLE = False
@@ -62,25 +57,14 @@ class APIController:
     
     @classmethod
     def initialize_assistant(cls):
-        """Initialize the assistant instance"""
-        if ASSISTANT_AVAILABLE and not cls.assistant_instance:
+        """Initialize the singleton assistant instance"""
+        global ASSISTANT_AVAILABLE
+        if ASSISTANT_AVAILABLE and not AISingleton.is_initialized():
             try:
-                status = Status()
-                tts = PIPER_TTS()
-                ollama = Ollama()
-                files = Files()
-                cls.assistant_instance = ConversationalAssistant(
-                    name="ARIA", 
-                    status=status, 
-                    tts=tts, 
-                    ollama=ollama, 
-                    files=files,
-                    voice_config=None,
-                    answer_helper=AnswerHelper(),
-                )
+                # Initialize the singleton AI assistant
+                initialize_ai_assistant(name="ARIA")
                 print("Assistant initialized successfully")
             except Exception as e:
-                # global ASSISTANT_AVAILABLE
                 print(f"Failed to initialize assistant: {e}")
                 ASSISTANT_AVAILABLE = False
     
@@ -136,12 +120,13 @@ class APIController:
             response_text = ""
             confidence_score = None
             
-            if ASSISTANT_AVAILABLE and cls.assistant_instance:
+            if ASSISTANT_AVAILABLE and AISingleton.is_initialized():
                 try:
-                    # Use assistant to process the question
-                    cls.assistant_instance.question = question
-                    cls.assistant_instance.process_command(question)
-                    response_text = cls.assistant_instance.response or "I'm not sure how to respond to that."
+                    # Use singleton assistant to process the question
+                    assistant = get_ai_assistant()
+                    assistant.question = question
+                    assistant.process_command(question)
+                    response_text = assistant.response or "I'm not sure how to respond to that."
                     confidence_score = 0.8  # Mock confidence score
                 except Exception as e:
                     response_text = f"Sorry, I encountered an error: {str(e)}"
@@ -227,11 +212,14 @@ class APIController:
     def get_assistant_status(cls):
         """Get current assistant status"""
         try:
+            assistant = get_ai_assistant() if AISingleton.is_initialized() else None
             status_info = {
                 'available': ASSISTANT_AVAILABLE,
-                'initialized': cls.assistant_instance is not None,
-                'name': cls.assistant_instance.name if cls.assistant_instance else None,
-                'is_connected': cls.assistant_instance.is_connected() if cls.assistant_instance else False
+                'initialized': AISingleton.is_initialized(),
+                'name': assistant.name if assistant else None,
+                'is_connected': assistant.is_connected() if assistant else False,
+                'ai_provider': assistant.ai_provider.name if assistant else None,
+                'response_time': assistant.ai_provider.response_time if assistant else None
             }
             
             return ResponseHandler.success('Assistant status retrieved successfully', status_info)
@@ -243,12 +231,13 @@ class APIController:
     def reset_assistant(cls):
         """Reset assistant conversation state"""
         try:
-            if not ASSISTANT_AVAILABLE or not cls.assistant_instance:
+            if not ASSISTANT_AVAILABLE or not AISingleton.is_initialized():
                 return ResponseHandler.error('Assistant not available', 503)
             
             # Reset assistant state if method exists
-            if hasattr(cls.assistant_instance, 'reset_conversation'):
-                cls.assistant_instance.reset_conversation()
+            assistant = get_ai_assistant()
+            if hasattr(assistant, 'reset_conversation'):
+                assistant.reset_conversation()
             
             return ResponseHandler.success('Assistant conversation reset successfully', {
                 'status': 'reset'

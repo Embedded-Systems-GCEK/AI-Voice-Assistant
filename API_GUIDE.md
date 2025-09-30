@@ -28,7 +28,7 @@ python launcher.py
 ```bash
 # Terminal 1 - API Server (Primary for Flutter)
 cd src
-python api_server.py
+python server/server.py
 
 # Terminal 2 - Unified Server (Web UI + Database & Core APIs)
 cd src  

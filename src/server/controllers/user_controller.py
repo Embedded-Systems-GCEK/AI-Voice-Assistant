@@ -1,6 +1,6 @@
-from models.models import User, QuestionResponse
-from database.db_helper import DatabaseHelper
-from handlers.request_handler import RequestHandler, ResponseHandler
+from ..models.models import User, QuestionResponse
+from ..database.db_helper import DatabaseHelper
+from ..handlers.request_handler import RequestHandler, ResponseHandler
 from typing import Dict, Any
 
 class UserController:

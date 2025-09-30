@@ -1,12 +1,28 @@
-from config.config import app, db
-from utils.helpers import init_cors, check_health
-from controllers.user_controller import UserController
-from controllers.question_controller import QuestionController
-from controllers.api_controller import APIController
-from handlers.request_handler import CORSHandler
-from database.db_helper import DatabaseHelper
-from models.models import User, QuestionResponse
-import threading
+from .config.config import app
+from .utils.helpers import init_cors, check_health
+from .controllers.user_controller import UserController
+from .controllers.question_controller import QuestionController
+from .controllers.api_controller import APIController
+from .handlers.request_handler import CORSHandler
+from .database.db_helper import DatabaseHelper
+from .models.models import User, QuestionResponse
+
+from .handlers.request_handler import ResponseHandler
+
+
+
+
+# Logging
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+# Views
+from .views import index_page
+
+# assistant
+from ai_assistant import ai_singleton
 
 
 # Initialize CORS
@@ -15,6 +31,20 @@ init_cors(app)
 # Create database tables
 with app.app_context():
     DatabaseHelper.create_all()
+
+
+# check if the ai assistant is initialized, if not initialize it
+
+if ai_singleton.is_initialized():
+    assistant = ai_singleton.get_assistant()
+    logger.info("AI Assistant singleton retrieved on server startup")
+else:
+    ai_singleton.initialize_assistant(name="Minix")
+    assistant = ai_singleton.get_assistant()
+    logger.info(" AI Assistant singleton initialized on server startup")
+
+
+
 
 # Routes
 @app.route('/health')
@@ -26,25 +56,10 @@ def ping():
     return "<h1>Pong!</h1>"
 
 
+
 @app.route('/')
 def index():
-    return """
-    <h1>AI Assistant Unified Server</h1>
-    <p>This server provides both API and UI functionality.</p>
-    <h3>Available Endpoints:</h3>
-    <ul>
-        <li><strong>Health:</strong> <a href="/health">/health</a></li>
-        <li><strong>Statistics:</strong> <a href="/stats">/stats</a></li>
-        <li><strong>API Example Questions:</strong> <a href="/api/example-questions">/api/example-questions</a></li>
-        <li><strong>API Status:</strong> <a href="/api/assistant/status">/api/assistant/status</a></li>
-    </ul>
-    <h3>API Usage:</h3>
-    <ul>
-        <li><strong>POST /api/ask</strong> - Ask a question</li>
-        <li><strong>GET /api/conversation/&lt;user_id&gt;</strong> - Get conversation history</li>
-        <li><strong>POST /api/assistant/reset</strong> - Reset assistant</li>
-    </ul>
-    """
+    return index_page()
 
 # Handle preflight OPTIONS requests
 @app.before_request
@@ -119,10 +134,12 @@ def reset_assistant():
 def get_stats():
     try:
         stats = DatabaseHelper.get_stats()
-        from handlers.request_handler import ResponseHandler
+        assistant_status = assistant.get_status()
+        stats['assistant_status'] = assistant_status
+        logger.info("Statistics retrieved successfully")
         return ResponseHandler.success('Statistics retrieved successfully', stats)
     except Exception as e:
-        from handlers.request_handler import ResponseHandler
+        logger.error(f"Error retrieving statistics: {e}")
         return ResponseHandler.server_error(str(e))
 
 if __name__ == '__main__':

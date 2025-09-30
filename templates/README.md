@@ -127,7 +127,7 @@ start_servers.bat
 
 # Option 4: Start servers manually
 # Terminal 1: API Server (for Flutter)
-python api_server.py
+python server/server.py
 
 # Terminal 2: Unified Server (for web UI)
 python server/server.py

@@ -1,5 +1,7 @@
-from config.config import db
+from ..config.config import db
 from typing import Optional, List, Dict, Any
+
+from ..models.models import User, QuestionResponse
 
 class DatabaseHelper:
     """Helper class for database operations"""
@@ -73,7 +75,6 @@ class DatabaseHelper:
     def get_stats() -> Dict[str, Any]:
         """Get database statistics"""
         try:
-            from models.models import User, QuestionResponse
             
             total_users = User.query.count()
             active_users = User.query.filter_by(is_active=True).count()
