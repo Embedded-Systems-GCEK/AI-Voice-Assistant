@@ -86,6 +86,22 @@ def ping():
     return "<h1>Pong!</h1>"
 
 
+@app.route('/')
+def index():
+    """
+    Home page / Web interface
+    ---
+    tags:
+      - Web Interface
+    responses:
+      200:
+        description: Returns the main web interface HTML page
+        content:
+          text/html:
+            schema:
+              type: string
+    """
+    return index_page()
 
 
 # Handle preflight OPTIONS requests
@@ -182,35 +198,417 @@ def get_users():
 
 @app.route('/users/<user_id>', methods=['GET'])
 def get_user(user_id):
+    """
+    Get a specific user by ID
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: string
+        description: The unique identifier of the user
+    responses:
+      200:
+        description: User details retrieved successfully
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                email:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+      404:
+        description: User not found
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "error"
+            message:
+              type: string
+              example: "User not found"
+    """
     return UserController.get_user(user_id)
 
 @app.route('/users/<user_id>', methods=['PUT'])
 def update_user(user_id):
+    """
+    Update an existing user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: string
+        description: The unique identifier of the user to update
+      - in: body
+        name: user_data
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: The user's updated name
+              example: "Jane Doe"
+            email:
+              type: string
+              format: email
+              description: The user's updated email address
+              example: "jane.doe@example.com"
+    responses:
+      200:
+        description: User updated successfully
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+              example: "User updated successfully"
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                email:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+                updated_at:
+                  type: string
+                  format: date-time
+      404:
+        description: User not found
+      400:
+        description: Validation error
+    """
     return UserController.update_user(user_id)
 
 @app.route('/users/<user_id>', methods=['DELETE'])
 def delete_user(user_id):
+    """
+    Delete a user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: string
+        description: The unique identifier of the user to delete
+    responses:
+      200:
+        description: User deleted successfully
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+              example: "User deleted successfully"
+      404:
+        description: User not found
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "error"
+            message:
+              type: string
+              example: "User not found"
+    """
     return UserController.delete_user(user_id)
 
 @app.route('/users/<user_id>/questions', methods=['GET'])
 def get_user_questions(user_id):
+    """
+    Get all questions asked by a specific user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: string
+        description: The unique identifier of the user
+    responses:
+      200:
+        description: List of questions asked by the user
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  user_id:
+                    type: string
+                  question:
+                    type: string
+                  response:
+                    type: string
+                  confidence_score:
+                    type: number
+                    format: float
+                  response_time_ms:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+      404:
+        description: User not found
+    """
     return UserController.get_user_questions(user_id)
 
 # Question routes
 @app.route('/questions', methods=['POST'])
 def create_question_response():
+    """
+    Create a new question-response record
+    ---
+    tags:
+      - Questions
+    parameters:
+      - in: body
+        name: question_data
+        required: true
+        schema:
+          type: object
+          required:
+            - user_id
+            - question
+            - response
+          properties:
+            user_id:
+              type: string
+              description: The ID of the user asking the question
+              example: "user123"
+            question:
+              type: string
+              description: The question asked
+              example: "What is artificial intelligence?"
+            response:
+              type: string
+              description: The response given by the assistant
+              example: "Artificial intelligence is..."
+            confidence_score:
+              type: number
+              format: float
+              description: Confidence score of the response (0-1)
+              example: 0.85
+            response_time_ms:
+              type: integer
+              description: Response time in milliseconds
+              example: 250
+    responses:
+      201:
+        description: Question-response record created successfully
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                user_id:
+                  type: string
+                question:
+                  type: string
+                response:
+                  type: string
+                confidence_score:
+                  type: number
+                response_time_ms:
+                  type: integer
+                timestamp:
+                  type: string
+                  format: date-time
+      400:
+        description: Validation error
+    """
     return QuestionController.create_question_response()
 
 @app.route('/questions', methods=['GET'])
 def get_question_responses():
+    """
+    Get all question-response records
+    ---
+    tags:
+      - Questions
+    parameters:
+      - in: query
+        name: limit
+        type: integer
+        description: Maximum number of records to return
+        default: 100
+      - in: query
+        name: offset
+        type: integer
+        description: Number of records to skip for pagination
+        default: 0
+    responses:
+      200:
+        description: List of all question-response records
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  user_id:
+                    type: string
+                  question:
+                    type: string
+                  response:
+                    type: string
+                  confidence_score:
+                    type: number
+                    format: float
+                  response_time_ms:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+    """
     return QuestionController.get_question_responses()
 
 @app.route('/questions/<response_id>', methods=['GET'])
 def get_question_response(response_id):
+    """
+    Get a specific question-response record by ID
+    ---
+    tags:
+      - Questions
+    parameters:
+      - in: path
+        name: response_id
+        required: true
+        type: integer
+        description: The unique identifier of the question-response record
+    responses:
+      200:
+        description: Question-response record details
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                user_id:
+                  type: string
+                question:
+                  type: string
+                response:
+                  type: string
+                confidence_score:
+                  type: number
+                  format: float
+                response_time_ms:
+                  type: integer
+                timestamp:
+                  type: string
+                  format: date-time
+      404:
+        description: Question-response record not found
+    """
     return QuestionController.get_question_response(response_id)
 
 @app.route('/questions/<response_id>', methods=['DELETE'])
 def delete_question_response(response_id):
+    """
+    Delete a question-response record
+    ---
+    tags:
+      - Questions
+    parameters:
+      - in: path
+        name: response_id
+        required: true
+        type: integer
+        description: The unique identifier of the question-response record to delete
+    responses:
+      200:
+        description: Question-response record deleted successfully
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+              example: "Question response deleted successfully"
+      404:
+        description: Question-response record not found
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "error"
+            message:
+              type: string
+              example: "Question response not found"
+    """
     return QuestionController.delete_question_response(response_id)
 
 # API routes
@@ -395,11 +793,98 @@ def get_assistant_status():
 
 @app.route('/api/assistant/reset', methods=['POST'])
 def reset_assistant():
+    """
+    Reset the AI assistant state
+    ---
+    tags:
+      - API
+    responses:
+      200:
+        description: Assistant reset successfully
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+              example: "Assistant reset successfully"
+            data:
+              type: object
+              properties:
+                name:
+                  type: string
+                initialized:
+                  type: boolean
+                  example: true
+      500:
+        description: Server error
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "error"
+            message:
+              type: string
+    """
     return APIController.reset_assistant()
 
 # Stats route
 @app.route('/stats', methods=['GET'])
 def get_stats():
+    """
+    Get system statistics
+    ---
+    tags:
+      - Statistics
+    responses:
+      200:
+        description: System statistics retrieved successfully
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "success"
+            message:
+              type: string
+              example: "Statistics retrieved successfully"
+            data:
+              type: object
+              properties:
+                total_users:
+                  type: integer
+                  description: Total number of registered users
+                  example: 42
+                total_questions:
+                  type: integer
+                  description: Total number of questions asked
+                  example: 156
+                average_response_time_ms:
+                  type: number
+                  format: float
+                  description: Average response time in milliseconds
+                  example: 234.5
+                average_confidence_score:
+                  type: number
+                  format: float
+                  description: Average confidence score
+                  example: 0.82
+                assistant_status:
+                  type: object
+                  description: Current status of the AI assistant
+                  properties:
+                    name:
+                      type: string
+                    initialized:
+                      type: boolean
+                    provider:
+                      type: string
+      500:
+        description: Server error
+    """
     try:
         stats = DatabaseHelper.get_stats()
         assistant_status = assistant.get_status()

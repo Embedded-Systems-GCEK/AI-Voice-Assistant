@@ -55,6 +55,12 @@ The API includes comprehensive Swagger/OpenAPI documentation that can be accesse
 - **AI Assistant**: `/api/ask` - Ask questions to the AI assistant
 - **Conversations**: `/api/conversation/<user_id>` - Get user conversation history
 - **Example Questions**: `/api/example-questions` - Pre-configured question sets
+- **Statistics**: `/stats` - System metrics and analytics
+
+### Documentation Resources:
+- 📘 **[Quick Start Guide](docs/SWAGGER_QUICKSTART.md)** - Get started with Swagger UI
+- 📚 **[Complete API Reference](docs/API_ENDPOINTS.md)** - Comprehensive endpoint documentation
+- 🔧 **[Implementation Details](docs/SWAGGER_IMPLEMENTATION.md)** - Technical implementation summary
 
 
 ## 🤝 Contributing
