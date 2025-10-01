@@ -1,6 +1,17 @@
 #  AI Voice Assistant 
 This is a fully functional , generic AI powered Voice Assistant 
 
+## Quick Start 
+
+Windows
+```powershell
+git clone https://github.com/aruncs31s/AI-Voice-Assistant.git
+cd AI-Voice-Assistant
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+python src/app.py
+```
 
 ## Features 
 ### AI & Conversation

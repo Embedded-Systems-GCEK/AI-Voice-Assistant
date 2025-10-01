@@ -10,8 +10,6 @@ from .models.models import User, QuestionResponse
 from .handlers.request_handler import ResponseHandler
 
 
-
-
 # Logging
 import logging
 logging.basicConfig(level=logging.INFO)
