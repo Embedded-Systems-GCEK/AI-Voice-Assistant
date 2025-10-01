@@ -87,9 +87,6 @@ def ping():
 
 
 
-@app.route('/')
-def index():
-    return index_page()
 
 # Handle preflight OPTIONS requests
 @app.before_request

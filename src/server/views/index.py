@@ -8,6 +8,7 @@ def index():
         <li><strong>Statistics:</strong> <a href="/stats">/stats</a></li>
         <li><strong>API Example Questions:</strong> <a href="/api/example-questions">/api/example-questions</a></li>
         <li><strong>API Status:</strong> <a href="/api/assistant/status">/api/assistant/status</a></li>
+        
     </ul>
     <h3>API Usage:</h3>
     <ul>
