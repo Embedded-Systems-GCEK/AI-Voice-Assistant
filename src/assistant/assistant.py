@@ -13,8 +13,41 @@ from .ai_provider import AIProvider, Ollama
 from .robot.assistant_robo import ASSISTANT
 from .files.files import Files
 
+EXAMPLE_QUESTIONS = [
+        {
+            "id": 1,
+            "category": "General",
+            "question": "What time is it?",
+            "description": "Ask for the current time"
+        },
+        {
+            "id": 2,
+            "category": "General",
+            "question": "What's the date today?",
+            "description": "Ask for today's date"
+        },
+        {
+            "id": 3,
+            "category": "General",
+            "question": "What day is it?",
+            "description": "Ask for the current day of the week"
+        },
+        {
+            "id": 4,
+            "category": "Personal",
+            "question": "How are you?",
+            "description": "General greeting and wellbeing check"
+        },
+        {
+            "id": 5,
+            "category": "Knowledge",
+            "question": "Tell me about artificial intelligence",
+            "description": "Learn about AI concepts"
+        }
+    ]
 
-class AsistantStatusErr(Enum):
+
+class AssistantStatusErr(Enum):
     FILE = "path not found"
     NET = "network error"
     AUTH = "authentication error"
@@ -26,7 +59,7 @@ class AssistantStatus(Enum):
     PROCESSING = "processing"
     SPEAKING = "speaking"
     READY = "ready"
-    ERROR = AsistantStatusErr
+    ERROR = AssistantStatusErr
 
 
 class ConversationStates(Enum):
@@ -114,8 +147,10 @@ class ConversationalAssistant(ASSISTANT):
         """
         self.query = cmd if cmd else self.question_helper.question
         question = self.question_helper.what_spoken()
+        print(f"Processing Command: {question}")
         try:
             self.response = self.ask_to_ai(question)
+            print(f"AI Response: {self.response}")
         except Exception as e:
             print(f"Error in process_command: {e}")
             self.state = ConversationStates.ERROR
@@ -144,7 +179,9 @@ class ConversationalAssistant(ASSISTANT):
     def is_answering(self) -> bool:
         _is_answering = self.answer_helper.is_answering() or self.state == ConversationStates.PROCESSING
         return _is_answering
-            
+    @staticmethod
+    def get_example_questions():
+        return EXAMPLE_QUESTIONS
 
 def test():
     ai_provider = Ollama()  # Replace with a concrete implementation
@@ -159,3 +196,4 @@ def test():
     while assistant.is_answering():
         pass
     print("-" * 30)
+

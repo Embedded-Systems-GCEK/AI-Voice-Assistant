@@ -2,9 +2,27 @@ from ..models.models import User, QuestionResponse
 from ..database.db_helper import DatabaseHelper
 from ..handlers.request_handler import RequestHandler, ResponseHandler
 
+from ..models.models import User, QuestionResponse
+from ..database.db_helper import DatabaseHelper
+from ..handlers.request_handler import RequestHandler, ResponseHandler
+from ..dto.response_dto import (
+    ExampleQuestionDTO
+)
+
+
+try:
+    from ai_assistant import get_ai_assistant, initialize_ai_assistant, AISingleton
+    ASSISTANT_AVAILABLE = True
+except ImportError:
+    ASSISTANT_AVAILABLE = False
+    raise ImportError("Assistant modules not available")
+
+    
 class QuestionController:
     """Controller for handling question response operations"""
-    
+    # Example questions for the Flutter app
+    def __init__(self):
+        self.assistant = get_ai_assistant()
     @staticmethod
     def create_question_response():
         """Create a new question response"""
@@ -93,3 +111,29 @@ class QuestionController:
         except Exception as e:
             DatabaseHelper.rollback()
             return ResponseHandler.server_error(str(e))
+    # @staticmethod
+    def get_example_questions(self):
+        """Get example questions for the Flutter app"""
+        try:
+            query_params = RequestHandler.get_query_params()
+            category = query_params.get('category')
+            
+            # Convert to DTOs
+            question_dtos = [ExampleQuestionDTO(**q) for q in self.assistant.get_example_questions()]
+            
+            if category:
+                filtered_dtos = [dto for dto in question_dtos 
+                                if dto.category.lower() == category.lower()]
+                return ResponseHandler.success('Example questions retrieved successfully', {
+                    'questions': [dto.to_dict() for dto in filtered_dtos],
+                    'total': len(filtered_dtos)
+                })
+            
+            return ResponseHandler.success('Example questions retrieved successfully', {
+                'questions': [dto.to_dict() for dto in question_dtos],
+                'total': len(question_dtos),
+                'categories': list(set(q['category'] for q in self.assistant.get_example_questions()))
+            })
+        except Exception as e:
+            return ResponseHandler.server_error(str(e))
+    

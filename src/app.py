@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
-# import server
 
 import server
-import time
-# import ai_assistant
 
 from ai_assistant import ai_singleton
 

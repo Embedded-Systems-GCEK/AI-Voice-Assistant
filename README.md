@@ -58,9 +58,12 @@ The API includes comprehensive Swagger/OpenAPI documentation that can be accesse
 - **Statistics**: `/stats` - System metrics and analytics
 
 ### Documentation Resources:
-- 📘 **[Quick Start Guide](docs/SWAGGER_QUICKSTART.md)** - Get started with Swagger UI
+- � **[API Guide with cURL Examples](API_GUIDE.md)** - Complete guide with all curl commands
+- 📄 **[Quick Reference Card](API_QUICK_REFERENCE.md)** - Essential curl commands cheat sheet
+- 📘 **[Swagger Quick Start](docs/SWAGGER_QUICKSTART.md)** - Get started with Swagger UI
 - 📚 **[Complete API Reference](docs/API_ENDPOINTS.md)** - Comprehensive endpoint documentation
 - 🔧 **[Implementation Details](docs/SWAGGER_IMPLEMENTATION.md)** - Technical implementation summary
+- 🗂️ **[Models Analysis](docs/MODELS_ANALYSIS.md)** - Database models documentation
 
 
 ## 🤝 Contributing

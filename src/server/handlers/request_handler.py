@@ -6,13 +6,13 @@ from typing import Dict, Any, Tuple, Optional
 class RequestHandler:
     """Handler for processing incoming requests"""
     @staticmethod
-    def get_json_data() -> Dict[str, Any]:
+    def get_json_data() -> Tuple[Dict[str, Any], str]:
         """Get JSON data from request"""
         try:
-            return request.get_json() or {}
+            return request.get_json() or {}, ""
         except Exception as e:
             print(f"Error parsing JSON data: {e}")
-            return {}
+            return {}, str(e)
     
     @staticmethod
     def get_query_params() -> Dict[str, str]:

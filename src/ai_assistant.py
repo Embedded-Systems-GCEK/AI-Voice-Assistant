@@ -73,8 +73,9 @@ ai_singleton.initialize_assistant(name="Minix")
 
 def get_ai_assistant() -> AIAssistant:
     """Convenience function to get the AI assistant singleton"""
-    return ai_singleton.get_assistant()
-
+    assistant = ai_singleton.get_assistant()
+    print(f"Using AI Assistant: {assistant.name} , AI Provider: {assistant.ai_provider.name} ID {id(assistant)}")
+    return assistant
 
 def initialize_ai_assistant(ai_provider: AIProvider = None, name: str = "AI Assistant") -> AIAssistant:
     """Convenience function to initialize the AI assistant singleton"""

@@ -42,17 +42,18 @@ class QuestionResponse(db.Model):
     question = db.Column(db.Text, nullable=False)
     response = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    confidence_score = db.Column(db.Float, nullable=True)
     response_time_ms = db.Column(db.Integer, nullable=True)
-    
-    def __init__(self, user_id: str, question: str, response: str, 
-                 confidence_score: Optional[float] = None, response_time_ms: Optional[int] = None):
+    status = db.Column(db.String(20), nullable=False, default='answered')  # e.g., 'answered', 'failed'
+    ai_provider= db.Column(db.String(50), nullable=True)  # e.g., 'Ollama', 'OpenAI' 
+
+    def __init__(self, user_id: str, question: str, response: str, status: str = 'answered', response_time_ms: Optional[int] = None, ai_provider: Optional[str] = None):
         self.user_id = user_id
         self.question = question
         self.response = response
-        self.confidence_score = confidence_score
         self.response_time_ms = response_time_ms
-    
+        self.status = status
+        self.ai_provider = ai_provider
+        
     def to_dict(self):
         """Convert question response instance to dictionary"""
         return {
@@ -61,8 +62,8 @@ class QuestionResponse(db.Model):
             'question': self.question,
             'response': self.response,
             'timestamp': self.timestamp.isoformat(),
-            'confidence_score': self.confidence_score,
-            'response_time_ms': self.response_time_ms
+            'response_time_ms': self.response_time_ms,
+            'status': self.status
         }
     
     def __repr__(self):

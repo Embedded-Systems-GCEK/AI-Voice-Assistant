@@ -2,7 +2,7 @@ from .config.config import app
 from .utils.helpers import init_cors, check_health
 from .controllers.user_controller import UserController
 from .controllers.question_controller import QuestionController
-from .controllers.api_controller import APIController
+from .controllers.api_controller import AssistantAPIController
 from .handlers.request_handler import CORSHandler
 from .database.db_helper import DatabaseHelper
 from .models.models import User, QuestionResponse
@@ -67,42 +67,6 @@ def health_check():
     """
     return check_health()
 
-@app.route("/ping")
-def ping():
-    """
-    Simple ping endpoint
-    ---
-    tags:
-      - Health
-    responses:
-      200:
-        description: Pong response
-        content:
-          text/html:
-            schema:
-              type: string
-              example: "<h1>Pong!</h1>"
-    """
-    return "<h1>Pong!</h1>"
-
-
-@app.route('/')
-def index():
-    """
-    Home page / Web interface
-    ---
-    tags:
-      - Web Interface
-    responses:
-      200:
-        description: Returns the main web interface HTML page
-        content:
-          text/html:
-            schema:
-              type: string
-    """
-    return index_page()
-
 
 # Handle preflight OPTIONS requests
 @app.before_request
@@ -129,36 +93,44 @@ def create_user():
             name:
               type: string
               description: The user's name
-              example: "John Doe"
+              example: "Arun C S"
             email:
               type: string
               format: email
               description: The user's email address
-              example: "john.doe@example.com"
+              example: "arun.cs@example.com"
+            "username":
+              type: string
+              description: The user's username
+              example: "aruncs"
     responses:
       201:
         description: User created successfully
         schema:
           type: object
           properties:
-            status:
-              type: string
-              example: "success"
             message:
               type: string
-            data:
+              example: "User created successfully"
+            user:
               type: object
               properties:
-                id:
-                  type: string
-                name:
-                  type: string
-                email:
-                  type: string
                 created_at:
                   type: string
                   format: date-time
-    """
+                  example: "2025-10-01T18:16:37.122712"
+                email:
+                  type: string
+                  example: "aruncs31ss@gmail.com"
+                id:
+                  type: string
+                  example: "d5d06cf9-036c-4342-b448-dca4307848c2"
+                is_active:
+                  type: boolean
+                  example: true
+                username:
+                  type: string
+                  example: "aruncs"    """
     return UserController.create_user()
 
 @app.route('/users', methods=['GET'])
@@ -644,7 +616,7 @@ def get_example_questions():
                   description:
                     type: string
     """
-    return APIController.get_example_questions()
+    return QuestionController.get_example_questions()
 
 @app.route('/api/ask', methods=['POST'])
 def ask_assistant():
@@ -699,7 +671,7 @@ def ask_assistant():
                 user_id:
                   type: string
     """
-    return APIController.ask_assistant()
+    return AssistantAPIController.ask_assistant()
 
 @app.route('/api/conversation/<user_id>', methods=['GET'])
 def get_user_conversation(user_id):
@@ -759,7 +731,7 @@ def get_user_conversation(user_id):
       404:
         description: User not found
     """
-    return APIController.get_user_conversation(user_id)
+    return AssistantAPIController.get_user_conversation(user_id)
 
 @app.route('/api/assistant/status', methods=['GET'])
 def get_assistant_status():
@@ -789,7 +761,7 @@ def get_assistant_status():
                 provider:
                   type: string
     """
-    return APIController.get_assistant_status()
+    return AssistantAPIController.get_assistant_status()
 
 @app.route('/api/assistant/reset', methods=['POST'])
 def reset_assistant():
@@ -829,7 +801,7 @@ def reset_assistant():
             message:
               type: string
     """
-    return APIController.reset_assistant()
+    return AssistantAPIController.reset_assistant()
 
 # Stats route
 @app.route('/stats', methods=['GET'])

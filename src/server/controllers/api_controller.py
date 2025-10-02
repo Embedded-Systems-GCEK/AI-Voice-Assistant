@@ -1,56 +1,28 @@
 from ..models.models import User, QuestionResponse
 from ..database.db_helper import DatabaseHelper
 from ..handlers.request_handler import RequestHandler, ResponseHandler
+from ..dto.request_dto import AskQuestionDTO, ConversationQueryDTO
+from ..dto.response_dto import (
+    AskQuestionResponseDTO,
+    ConversationResponseDTO,
+    AssistantStatusDTO,
+)
 from datetime import datetime
 import sys
 import os
 
 # Add parent directory to path to import assistant modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+# sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 try:
-    from ai_assistant import get_ai_assistant, initialize_ai_assistant, AISingleton
+    from ...ai_assistant import get_ai_assistant, initialize_ai_assistant, AISingleton
     ASSISTANT_AVAILABLE = True
 except ImportError:
     ASSISTANT_AVAILABLE = False
     print("Assistant modules not available")
 
-class APIController:
+class AssistantAPIController:
     """Controller for handling API endpoints"""
-    
-    # Example questions for the Flutter app
-    EXAMPLE_QUESTIONS = [
-        {
-            "id": 1,
-            "category": "General",
-            "question": "What time is it?",
-            "description": "Ask for the current time"
-        },
-        {
-            "id": 2,
-            "category": "General",
-            "question": "What's the date today?",
-            "description": "Ask for today's date"
-        },
-        {
-            "id": 3,
-            "category": "General",
-            "question": "What day is it?",
-            "description": "Ask for the current day of the week"
-        },
-        {
-            "id": 4,
-            "category": "Personal",
-            "question": "How are you?",
-            "description": "General greeting and wellbeing check"
-        },
-        {
-            "id": 5,
-            "category": "Knowledge",
-            "question": "Tell me about artificial intelligence",
-            "description": "Learn about AI concepts"
-        }
-    ]
     
     # Initialize assistant instance
     assistant_instance = None
@@ -62,48 +34,31 @@ class APIController:
         if ASSISTANT_AVAILABLE and not AISingleton.is_initialized():
             try:
                 # Initialize the singleton AI assistant
-                initialize_ai_assistant(name="ARIA")
+                initialize_ai_assistant(name="Minix")
                 print("Assistant initialized successfully")
             except Exception as e:
                 print(f"Failed to initialize assistant: {e}")
                 ASSISTANT_AVAILABLE = False
     
-    @staticmethod
-    def get_example_questions():
-        """Get example questions for the Flutter app"""
-        try:
-            query_params = RequestHandler.get_query_params()
-            category = query_params.get('category')
-            
-            if category:
-                filtered_questions = [q for q in APIController.EXAMPLE_QUESTIONS 
-                                    if q['category'].lower() == category.lower()]
-                return ResponseHandler.success('Example questions retrieved successfully', {
-                    'questions': filtered_questions,
-                    'total': len(filtered_questions)
-                })
-            
-            return ResponseHandler.success('Example questions retrieved successfully', {
-                'questions': APIController.EXAMPLE_QUESTIONS,
-                'total': len(APIController.EXAMPLE_QUESTIONS),
-                'categories': list(set(q['category'] for q in APIController.EXAMPLE_QUESTIONS))
-            })
-        except Exception as e:
-            return ResponseHandler.server_error(str(e))
     
     @classmethod
     def ask_assistant(cls):
         """Ask a question to the AI assistant"""
         try:
-            data = RequestHandler.get_json_data()
+            data , err = RequestHandler.get_json_data()
+            if err:
+                return ResponseHandler.validation_error(f"Invalid JSON data: {err}")
+            # Use DTO for validation
+            try:
+                dto = AskQuestionDTO.from_dict(data)
+                is_valid, error_msg = dto.validate()
+                if not is_valid:
+                    return ResponseHandler.validation_error(error_msg)
+            except ValueError as e:
+                return ResponseHandler.validation_error(str(e))
             
-            # Validate required fields
-            is_valid, error_msg = RequestHandler.validate_required_fields(data, ['question'])
-            if not is_valid:
-                return ResponseHandler.validation_error(error_msg)
-            
-            question = data['question']
-            user_id = data.get('user_id')
+            question = dto.question
+            user_id = dto.user_id
             
             # Verify user exists if user_id is provided
             if user_id:
@@ -114,47 +69,25 @@ class APIController:
             start_time = datetime.now()
             
             # Initialize assistant if not already done
-            cls.initialize_assistant()
+            # cls.initialize_assistant()
             
             # Get response from assistant
             response_text = ""
-            confidence_score = None
-            
+            status = "failed"
             if ASSISTANT_AVAILABLE and AISingleton.is_initialized():
                 try:
-                    # Use singleton assistant to process the question
                     assistant = get_ai_assistant()
                     assistant.question = question
                     assistant.process_command(question)
+                    assistant.answer()
+                    if assistant.response is not None:
+                        status =  "answered"
                     response_text = assistant.response or "I'm not sure how to respond to that."
-                    confidence_score = 0.8  # Mock confidence score
                 except Exception as e:
                     response_text = f"Sorry, I encountered an error: {str(e)}"
-                    confidence_score = 0.1
+                    status = "failed"
             else:
-                # Fallback responses when assistant is not available
-                fallback_responses = {
-                    'time': f"The current time is {datetime.now().strftime('%I:%M %p')}",
-                    'date': f"Today's date is {datetime.now().strftime('%B %d, %Y')}",
-                    'day': f"Today is {datetime.now().strftime('%A')}",
-                    'hello': "Hello! How can I help you today?",
-                    'how are you': "I'm doing well, thank you for asking!",
-                    'name': "I'm ARIA, your AI assistant.",
-                    'help': "I can help you with questions about time, date, general information, and more!"
-                }
-                
-                question_lower = question.lower()
-                response_text = "I'm not sure how to respond to that."
-                
-                for key, fallback in fallback_responses.items():
-                    if key in question_lower:
-                        response_text = fallback
-                        confidence_score = 0.9
-                        break
-                
-                if confidence_score is None:
-                    confidence_score = 0.3
-            
+                response_text = "Assistant is not available at the moment."
             end_time = datetime.now()
             response_time_ms = int((end_time - start_time).total_seconds() * 1000)
             
@@ -164,19 +97,24 @@ class APIController:
                     user_id=user_id,
                     question=question,
                     response=response_text,
-                    confidence_score=confidence_score,
-                    response_time_ms=response_time_ms
+                    response_time_ms=response_time_ms,
+                    status=status,
+                    ai_provider=assistant.ai_provider.name if assistant else None
                 )
                 DatabaseHelper.save(question_response)
             
-            return ResponseHandler.success('Question processed successfully', {
-                'question': question,
-                'response': response_text,
-                'confidence_score': confidence_score,
-                'response_time_ms': response_time_ms,
-                'timestamp': datetime.now().isoformat(),
-                'user_id': user_id
-            })
+            # Create response DTO
+            response_dto = AskQuestionResponseDTO(
+                question=question,
+                response=response_text,
+                response_time_ms=response_time_ms,
+                timestamp=datetime.now().isoformat(),
+                user_id=user_id,
+                ai_provider=assistant.ai_provider.name if assistant else None,
+                status=status
+            )
+            
+            return ResponseHandler.success('Question processed successfully', response_dto.to_dict())
             
         except Exception as e:
             return ResponseHandler.server_error(str(e))
@@ -190,20 +128,34 @@ class APIController:
                 return ResponseHandler.not_found('User')
             
             query_params = RequestHandler.get_query_params()
-            limit = int(query_params.get('limit', 50))
-            offset = int(query_params.get('offset', 0))
+            
+            # Use DTO for query parameters
+            try:
+                query_dto = ConversationQueryDTO.from_dict(query_params)
+                is_valid, error_msg = query_dto.validate()
+                if not is_valid:
+                    return ResponseHandler.validation_error(error_msg)
+            except ValueError as e:
+                return ResponseHandler.validation_error(str(e))
             
             conversations = QuestionResponse.query.filter_by(user_id=user_id)\
                 .order_by(QuestionResponse.timestamp.desc())\
-                .limit(limit)\
-                .offset(offset)\
+                .limit(query_dto.limit)\
+                .offset(query_dto.offset)\
                 .all()
             
-            return ResponseHandler.success('Conversation history retrieved successfully', {
-                'user': user.to_dict(),
-                'conversations': [conv.to_dict() for conv in conversations],
-                'total': QuestionResponse.query.filter_by(user_id=user_id).count()
-            })
+            total = QuestionResponse.query.filter_by(user_id=user_id).count()
+            
+            # Create response DTO
+            response_dto = ConversationResponseDTO.from_data(
+                user=user,
+                conversations=conversations,
+                total=total,
+                limit=query_dto.limit,
+                offset=query_dto.offset
+            )
+            
+            return ResponseHandler.success('Conversation history retrieved successfully', response_dto.to_dict())
             
         except Exception as e:
             return ResponseHandler.server_error(str(e))
@@ -213,16 +165,18 @@ class APIController:
         """Get current assistant status"""
         try:
             assistant = get_ai_assistant() if AISingleton.is_initialized() else None
-            status_info = {
-                'available': ASSISTANT_AVAILABLE,
-                'initialized': AISingleton.is_initialized(),
-                'name': assistant.name if assistant else None,
-                'is_connected': assistant.is_connected() if assistant else False,
-                'ai_provider': assistant.ai_provider.name if assistant else None,
-                'response_time': assistant.ai_provider.response_time if assistant else None
-            }
             
-            return ResponseHandler.success('Assistant status retrieved successfully', status_info)
+            # Create status DTO
+            status_dto = AssistantStatusDTO(
+                available=ASSISTANT_AVAILABLE,
+                initialized=AISingleton.is_initialized(),
+                name=assistant.name if assistant else None,
+                is_connected=assistant.is_connected() if assistant else False,
+                ai_provider=assistant.ai_provider.name if assistant else None,
+                response_time=assistant.ai_provider.response_time if assistant else None
+            )
+            
+            return ResponseHandler.success('Assistant status retrieved successfully', status_dto.to_dict())
             
         except Exception as e:
             return ResponseHandler.server_error(str(e))
