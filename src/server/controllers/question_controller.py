@@ -11,7 +11,7 @@ from ..dto.response_dto import (
 
 
 try:
-    from ai_assistant import get_ai_assistant, initialize_ai_assistant, AISingleton
+    from ai_assistant import get_ai_assistant
     ASSISTANT_AVAILABLE = True
 except ImportError:
     ASSISTANT_AVAILABLE = False

@@ -28,12 +28,3 @@ db = SQLAlchemy(app)
 # Initialize Swagger
 swagger = Swagger(app)
 
-# Configuration settings
-# class Config:
-#     """Application configuration class"""
-#     SECRET_KEY = 'dev-secret-key'  # Change this in production
-#     DATABASE_URL = 'sqlite:///ai_assistant.db'
-#     CORS_ORIGINS = ["http://localhost:*", "http://127.0.0.1:*"]
-#     DEBUG = True
-#     HOST = '0.0.0.0'
-#     PORT = 5000
