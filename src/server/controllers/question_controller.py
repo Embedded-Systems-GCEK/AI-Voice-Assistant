@@ -9,7 +9,6 @@ from ..dto.response_dto import (
     ExampleQuestionDTO
 )
 
-
 try:
     from ai_assistant import get_ai_assistant
     ASSISTANT_AVAILABLE = True
@@ -111,7 +110,6 @@ class QuestionController:
         except Exception as e:
             DatabaseHelper.rollback()
             return ResponseHandler.server_error(str(e))
-    # @staticmethod
     def get_example_questions(self):
         """Get example questions for the Flutter app"""
         try:

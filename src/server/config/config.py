@@ -6,7 +6,7 @@ from flasgger import Swagger
 app = Flask(__name__)
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../../ai_assistant.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ai_assistant.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Swagger configuration

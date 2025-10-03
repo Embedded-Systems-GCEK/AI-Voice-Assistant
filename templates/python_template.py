@@ -6,11 +6,10 @@ Complete implementation example for Python applications
 import requests
 import asyncio
 import aiohttp
-import time
 import json
 import logging
-from typing import Dict, List, Optional, Callable, Any
-from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Callable
+from dataclasses import dataclass
 from datetime import datetime
 import threading
 
@@ -366,7 +365,7 @@ def create_flask_app(assistant_api_url: str = "http://localhost:5001"):
                     'session_id': status.session_id
                 }
             })
-        except Exception as e:
+        except Exception:
             logging.exception("Exception in /api/status endpoint")
             return jsonify({'status': 'error', 'message': 'An internal error has occurred.'}), 500
     
@@ -391,7 +390,7 @@ def create_flask_app(assistant_api_url: str = "http://localhost:5001"):
                     'timestamp': response.timestamp.isoformat()
                 }
             })
-        except Exception as e:
+        except Exception:
             logging.exception("Exception in /api/ask endpoint")
             return jsonify({'status': 'error', 'message': 'An internal error has occurred.'}), 500
     
@@ -418,7 +417,7 @@ def create_flask_app(assistant_api_url: str = "http://localhost:5001"):
                     ]
                 }
             })
-        except Exception as e:
+        except Exception:
             logging.exception("Exception in /api/conversation endpoint")
             return jsonify({'status': 'error', 'message': 'An internal error has occurred.'}), 500
     
@@ -428,7 +427,7 @@ def create_flask_app(assistant_api_url: str = "http://localhost:5001"):
         try:
             result = client.reset_conversation()
             return jsonify({'status': 'success', 'data': result})
-        except Exception as e:
+        except Exception:
             logging.exception("Exception in /api/reset endpoint")
             return jsonify({'status': 'error', 'message': 'An internal error has occurred.'}), 500
     
@@ -532,7 +531,6 @@ except ImportError:
 # =============================================================================
 
 import argparse
-import sys
 
 class ChatCLI:
     """Command line chat interface"""

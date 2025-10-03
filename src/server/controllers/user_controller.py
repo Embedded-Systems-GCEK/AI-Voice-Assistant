@@ -10,13 +10,15 @@ class UserController:
     def create_user():
         """Create a new user"""
         try:
-            data = RequestHandler.get_json_data()
-            
+            data,err  = RequestHandler.get_json_data()
+            if err:
+                return ResponseHandler.validation_error(f"Invalid JSON data: {err}")
             # Validate required fields
             is_valid, error_msg = RequestHandler.validate_required_fields(data, ['username', 'email'])
             if not is_valid:
                 return ResponseHandler.validation_error(error_msg)
-            
+            if not is_valid:
+                return ResponseHandler.validation_error(error_msg)
             # Check if user already exists
             existing_user = User.query.filter_by(email=data['email']).first()
             if existing_user:

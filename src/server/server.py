@@ -5,7 +5,6 @@ from .controllers.question_controller import QuestionController
 from .controllers.api_controller import AssistantAPIController
 from .handlers.request_handler import CORSHandler
 from .database.db_helper import DatabaseHelper
-from .models.models import User, QuestionResponse
 
 from .handlers.request_handler import ResponseHandler
 
@@ -28,7 +27,7 @@ init_cors(app)
 
 # Create database tables
 with app.app_context():
-    DatabaseHelper.create_all()
+  DatabaseHelper.create_all()
 
 
 # check if the ai assistant is initialized, if not initialize it
