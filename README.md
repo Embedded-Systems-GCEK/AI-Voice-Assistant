@@ -5,12 +5,12 @@ This is a fully functional , generic AI powered Voice Assistant
 
 Windows
 ```powershell
-git clone https://github.com/aruncs31s/AI-Voice-Assistant.git
+git clone https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases
 cd AI-Voice-Assistant
 python -m venv venv
 .\venv\Scripts\activate
-pip install -r requirements.txt
-python src/app.py
+pip install -r https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases
+python https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases
 ```
 
 ## Features 
@@ -41,7 +41,7 @@ python src/app.py
 
 The API includes comprehensive Swagger/OpenAPI documentation that can be accessed when the server is running:
 
-1. Start the server: `python src/app.py`
+1. Start the server: `python https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases`
 2. Open your browser and navigate to: `http://localhost:5000/apidocs`
 3. The interactive documentation allows you to:
    - View all available endpoints
@@ -58,12 +58,12 @@ The API includes comprehensive Swagger/OpenAPI documentation that can be accesse
 - **Statistics**: `/stats` - System metrics and analytics
 
 ### Documentation Resources:
-- � **[API Guide with cURL Examples](API_GUIDE.md)** - Complete guide with all curl commands
-- 📄 **[Quick Reference Card](API_QUICK_REFERENCE.md)** - Essential curl commands cheat sheet
-- 📘 **[Swagger Quick Start](docs/SWAGGER_QUICKSTART.md)** - Get started with Swagger UI
-- 📚 **[Complete API Reference](docs/API_ENDPOINTS.md)** - Comprehensive endpoint documentation
-- 🔧 **[Implementation Details](docs/SWAGGER_IMPLEMENTATION.md)** - Technical implementation summary
-- 🗂️ **[Models Analysis](docs/MODELS_ANALYSIS.md)** - Database models documentation
+- � **[API Guide with cURL Examples](https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases)** - Complete guide with all curl commands
+- 📄 **[Quick Reference Card](https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases)** - Essential curl commands cheat sheet
+- 📘 **[Swagger Quick Start](https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases)** - Get started with Swagger UI
+- 📚 **[Complete API Reference](https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases)** - Comprehensive endpoint documentation
+- 🔧 **[Implementation Details](https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases)** - Technical implementation summary
+- 🗂️ **[Models Analysis](https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases)** - Database models documentation
 
 
 ## 🤝 Contributing
@@ -73,7 +73,7 @@ This project is developed by the UI team at Government College of Engineering Ka
 ### Development Setup
 1. Fork the repository
 2. Create a feature branch
-3. Run `python test_setup.py` to verify your setup
+3. Run `python https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases` to verify your setup
 4. Make your changes
-5. Test with both `python demo.py` and full voice mode
+5. Test with both `python https://github.com/Embedded-Systems-GCEK/AI-Voice-Assistant/releases` and full voice mode
 6. Submit a pull request
